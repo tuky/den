@@ -3,13 +3,15 @@
 {
   programs.ssh = {
     enable = true;
-    matchBlocks.github = {
-      host = "github.com";
-      user = "git";
-      identityFile = "~/.ssh/id_ed25519_github";
-      identitiesOnly = true;
-      addKeysToAgent = "yes";
-      serverAliveInterval = 60;
+    enableDefaultConfig = false;
+    settings = {
+      "github.com" = {
+        User = "git";
+        IdentityFile = "~/.ssh/id_ed25519_github";
+        IdentitiesOnly = "yes";
+        AddKeysToAgent = "yes";
+        ServerAliveInterval = 60;
+      };
     };
   };
 }
