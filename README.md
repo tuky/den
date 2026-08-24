@@ -1,395 +1,152 @@
 # den
 
-A personal, reproducible development environment using Nix flakes and Home Manager.
+`den` is my personal, declarative configuration for the machines I use and the software I use on them. It describes what makes those machines mine: the shell, terminal tools, Git and SSH defaults, editors, applications, development tooling, and eventually system configuration where Nix is appropriate.
 
-## Overview
+Development tools are an important part of `den`, but they are one category within a broader personal computing configuration.
 
-`den` is your portable personal development environment, designed to work consistently across multiple machines and operating systems:
+## Status
 
-- **NixOS** (existing home machine, migration planned later)
-- **WSL2 Ubuntu** (primary test environment)
-- **GCP Compute Engine Ubuntu** (future)
-- **macOS** (future)
+| Host | Platform | Current status | Activation |
+| --- | --- | --- | --- |
+| `wsl` | Ubuntu on WSL2 | First test host; Home Manager configuration is implemented | `home-manager switch --flake .#wsl` |
+| `gcp` | Ubuntu on GCP Compute Engine | Planned host entry; Home Manager configuration is implemented | `home-manager switch --flake .#gcp` |
+| `macbook` | macOS | Planned host entry; Darwin module is minimal | `home-manager switch --flake .#macbook` |
+| `home-nixos` | NixOS | Existing machine; migration is deferred | Not exposed yet |
 
-The repository contains your declarative user-level configuration via Home Manager and Nix flakes, while system-specific setup and credential provisioning remain external.
+The commands above are the eventual activation commands. This repository does not bootstrap or modify any machine automatically.
 
 ## Architecture
 
-```
-                    den (flake)
-                     │
-          ┌──────────┼──────────┐
-          │          │          │
-        NixOS       WSL2       macOS
-          │          │          │
-          └──────────┼──────────┘
-                     │
-                Home Manager
-                     │
-              shared user config
-                     │
-          ┌──────────┴──────────┐
-          │                     │
-     common tools          platform-specific
-                           configuration
+The repository separates three kinds of configuration:
+
+- **Common user configuration** in `home/`: shared Home Manager modules for tools, shell, Git, SSH, and direnv.
+- **Platform configuration** in `modules/`: reusable behavior for Linux and Darwin. A future `modules/nixos/` can contain NixOS system modules.
+- **Host configuration** in `hosts/`: concrete environments such as WSL2, GCP, and a MacBook. Host files stay small until a machine actually needs distinct settings.
+
+```text
+den
+├── common user configuration
+├── platform modules
+│   ├── Linux
+│   │   ├── WSL2 host
+│   │   └── GCP host
+│   ├── Darwin
+│   │   └── MacBook host
+│   └── NixOS (future system modules)
+└── host entry points
 ```
 
-## Directory Structure
+Current layout:
 
-```
+```text
 den/
-├── flake.nix                 # Main Nix flake with all inputs and outputs
-├── flake.lock               # Pinned versions (auto-generated, commit this)
-├── README.md                # This file
-├── LICENSE                  # MIT license
-│
-├── home-manager/
-│   ├── home.nix            # Main Home Manager config (packages, state version)
-│   ├── programs/
-│   │   ├── git.nix         # Git configuration with SSH for GitHub
-│   │   ├── direnv.nix      # direnv setup for project-specific environments
-│   │   └── shell.nix       # Bash and Zsh configuration (shared + platform-specific)
-│   └── shells/             # (Reserved for future shell-specific modules)
-│
+├── flake.nix
+├── flake.lock
+├── home/
+│   ├── default.nix
+│   ├── tools.nix
+│   ├── shell.nix
+│   ├── git.nix
+│   ├── ssh.nix
+│   └── direnv.nix
+├── modules/
+│   ├── linux/default.nix
+│   └── darwin/default.nix
 └── hosts/
-    ├── linux/
-    │   └── home.nix        # Linux-specific overrides (WSL2, GCP, generic Linux)
-    ├── darwin/
-    │   └── home.nix        # macOS-specific overrides (future)
-    └── nixos/              # (Reserved for future NixOS system config migration)
+    ├── wsl.nix
+    ├── gcp.nix
+    └── macbook.nix
 ```
 
-## Quick Start
+A host selects the shared `home/` modules, its platform module, and its own small host file. Linux is therefore a reusable platform, not a machine identity: WSL2 and GCP share Linux behavior while remaining independently configurable.
 
-### Prerequisites
+## Nix and Home Manager
 
-You need Nix with flakes support and Home Manager. See [Setup by Platform](#setup-by-platform) below.
+The flake uses `nixpkgs` unstable and Home Manager. Ubuntu and macOS hosts use standalone Home Manager for user-level configuration. Their base operating system, Docker daemon, cloud login, and other machine services remain native to the platform unless later added deliberately.
 
-### Bootstrap
+The existing home NixOS machine is intentionally not changed. Its eventual migration will combine:
 
-1. **Clone or navigate to this repository:**
-   ```bash
-   cd ~/path/to/den
-   ```
+- NixOS modules for system-level configuration;
+- Home Manager, integrated as a NixOS module, for user-level configuration;
+- a host entry for `home-nixos`.
 
-2. **Update flake inputs** (if needed):
-   ```bash
-   nix flake update
-   ```
+That migration will happen after the standalone Home Manager setup has been tested on WSL2.
 
-3. **Build the Home Manager configuration:**
-   ```bash
-   nix flake show
-   ```
-   This displays available configurations. You should see `linux` and `darwin`.
+## Included configuration
 
-4. **Switch to your Home Manager configuration:**
-   ```bash
-   # For Linux (WSL2, GCP, etc.)
-   home-manager switch --flake .#linux
-   
-   # For macOS (future)
-   home-manager switch --flake .#darwin
-   ```
+The current shared configuration includes:
 
-5. **Verify installation:**
-   ```bash
-   which git
-   which direnv
-   which go
-   python3 --version
-   ```
+- zsh as the only managed interactive shell;
+- the login shell remains an external machine setting and is not changed by `den`;
+- Git defaults and aliases, without hard-coding Git identity;
+- GitHub SSH configuration using `~/.ssh/id_ed25519_github`;
+- direnv with nix-direnv integration;
+- tmux, jq, yq, curl, wget, and OpenSSH;
+- Go, Node.js, Python, and `uv`;
+- Docker CLI tools, Terraform, `gcloud`, and `gh`.
 
-### Updating Configuration
+`uv` remains the preferred Python package and environment manager. No nvm, pyenv, asdf, or mise layer is included.
 
-After modifying any `.nix` file:
+Docker is treated as a platform concern: installing the CLI does not claim to install or configure a daemon. For example, WSL2 may use Docker Desktop or a separately managed Docker service.
 
-```bash
-home-manager switch --flake .#linux   # or .#darwin
-```
+## Credentials and public safety
 
-To update all Nix inputs to their latest versions:
+This is a public repository. It contains only declarative, non-secret defaults. Credential provisioning stays outside `den`:
 
-```bash
-nix flake update
-```
+- never commit private SSH keys, API keys, tokens, passwords, cloud credentials, or service-account files;
+- the GitHub private key is expected at `~/.ssh/id_ed25519_github`, but is never created or stored here;
+- Git name and email must be configured through an external or local machine-specific mechanism;
+- no secrets-management framework is added until there is a concrete need for one.
 
-## Setup by Platform
+SSH configuration is kept modular so the authentication strategy can change later without restructuring the rest of the repository.
 
-### WSL2 Ubuntu
+## First use on WSL2
 
-1. **Install Nix:**
-   ```bash
-   curl -L https://nixos.org/nix/install | sh
-   source ~/.nix-profile/etc/profile.d/nix.sh
-   ```
+This is documentation for a future/manual activation; it does not run anything automatically.
 
-2. **Enable flakes** (add to `~/.config/nix/nix.conf` or `~/.nix-profile/etc/nix/nix.conf`):
-   ```
-   experimental-features = nix-command flakes
-   ```
+1. Install Nix with flakes enabled on the Ubuntu/WSL2 machine.
+2. Clone this repository and enter it.
+3. Provision credentials separately, including the GitHub SSH key if needed.
+4. Inspect the configuration, then activate the WSL host:
 
-3. **Install Home Manager:**
-   ```bash
-   nix run home-manager/master -- switch --flake ~/.config/den#linux
-   ```
-   (Adjust path if your clone is elsewhere.)
+    ```bash
+    nix run .#home-manager -- switch -b backup --flake .#wsl
+    ```
 
-4. **SSH Setup:**
-   - Ensure your GitHub SSH key exists at `~/.ssh/id_ed25519_github`
-   - Test: `ssh -T git@github.com`
+    The backup flag is for the first activation when Home Manager takes ownership of existing files. After activation, use the installed command for later changes:
 
-5. **Verify Git is configured:**
-   ```bash
-   git config --global user.name
-   git config --global user.email
-   # If blank, update in flake and re-apply: home-manager switch --flake .#linux
-   ```
+    ```bash
+    home-manager switch --flake ~/.config/den#wsl
+    ```
 
-### GCP Compute Engine (Ubuntu)
+5. Restart the shell if needed and verify the tools relevant to that machine.
 
-Same as WSL2 above, but run in a GCP VM instead. The configuration is identical because both use Linux + Nix + Home Manager + den.
+For GCP Ubuntu, use the same standalone Home Manager model with `.#gcp`. Access through VS Code Remote SSH is an operational choice, not an architectural dependency in this repository.
 
-### macOS (Future)
+## Working on den
 
-When you acquire a Mac:
-
-1. **Install Nix:**
-   ```bash
-   curl -L https://nixos.org/nix/install | sh
-   ```
-
-2. **Enable flakes:**
-   Edit `~/.config/nix/nix.conf`:
-   ```
-   experimental-features = nix-command flakes
-   ```
-
-3. **Install Home Manager:**
-   ```bash
-   nix run home-manager/master -- switch --flake ~/.config/den#darwin
-   ```
-
-4. **macOS-specific notes:**
-   - zsh will be the default shell (configured in `hosts/darwin/home.nix`)
-   - Docker, Terraform, and similar tools may require additional setup outside Home Manager
-   - See `hosts/darwin/home.nix` for platform-specific overrides
-
-### Existing NixOS Machine (Later)
-
-This repository does **not** yet include system-level NixOS configuration. To migrate your existing NixOS setup later:
-
-1. **Validate den on WSL2 or another Linux first**
-2. **Create a system flake** (e.g., `/etc/nixos/flake.nix`) that uses both:
-   - Your system configuration
-   - Home Manager from this repository (`den`)
-3. **Incrementally migrate** user configuration from your current setup
-4. **Test on the NixOS machine** before making it the primary environment
-
-For now, keep your existing `/etc/nixos` configuration as-is.
-
-## Included Tools
-
-The default configuration installs:
-
-**Languages & Runtimes:**
-- Go
-- Node.js 20
-- Python 3.12
-- uv (Python package manager)
-
-**DevOps & Cloud:**
-- Docker
-- Docker Compose
-- Terraform
-- Google Cloud CLI (`gcloud`)
-- GitHub CLI (`gh`)
-
-**Utilities:**
-- direnv (project-specific development environments)
-- tmux (terminal multiplexer)
-- jq (JSON processor)
-- yq (YAML processor)
-- git, curl, wget, openssh
-
-**Shell:**
-- Bash (current default)
-- Zsh (configured, ready for gradual transition)
-
-## Configuration
-
-### Git
-
-Edit `home-manager/programs/git.nix`:
-- Update `userEmail` and `userName` to your actual values
-- Add more aliases or settings as needed
-- SSH is configured to use `~/.ssh/id_ed25519_github` (see [SSH Setup](#ssh-setup) below)
-
-### Shell
-
-Edit `home-manager/programs/shell.nix`:
-- Modify common aliases and functions in `commonShellConfig`
-- Add bash-specific settings in the `programs.bash` section
-- Add zsh-specific settings in the `programs.zsh` section
-
-### direnv
-
-Edit `home-manager/programs/direnv.nix`:
-- Configure direnv behavior (timeouts, dotenv loading, etc.)
-- Add `.envrc.template` for project setup instructions
-
-### Adding More Packages
-
-Edit `home-manager/home.nix`:
-- Add packages to the `home.packages` list
-- Search nixpkgs: `nix search nixpkgs jq`
-
-### Platform-Specific Configuration
-
-- **Linux (WSL2, GCP, etc.):** Edit `hosts/linux/home.nix`
-- **macOS:** Edit `hosts/darwin/home.nix`
-
-## SSH Setup
-
-Your GitHub SSH key must be provisioned separately:
-
-1. **Generate or import your key** (outside this repository):
-   ```bash
-   # If you don't have one yet:
-   ssh-keygen -t ed25519 -C "your-email@example.com" -f ~/.ssh/id_ed25519_github -N ""
-   
-   # Add to GitHub: https://github.com/settings/keys
-   ```
-
-2. **Verify the key works:**
-   ```bash
-   ssh -T git@github.com
-   # Expected: "Hi <username>! You've successfully authenticated..."
-   ```
-
-3. **den configures SSH to use this key**, but does **not** create or manage the private key.
-
-## Development
-
-To work on `den` itself:
+Use local, non-destructive checks while editing:
 
 ```bash
-# Enter the development shell with formatting tools
-nix flake show  # View available configurations
-
-# Format Nix files
-nix fmt
-
-# Check for syntax errors
 nix flake check
-
-# Test the configuration without applying it
-nix flake show .#linux
+nix fmt
+nix flake show
 ```
 
-## Troubleshooting
+Home Manager configurations can be evaluated without activating them through their `activationPackage` output. `home.stateVersion = "26.05"` is a deliberate stable schema baseline for this new configuration; it is independent of the nixpkgs and Home Manager input versions and should only change as part of a planned migration. The lock file should be committed when inputs are intentionally updated.
 
-### "experimental-features not enabled"
+## Deferred work
 
-Add to `~/.config/nix/nix.conf`:
-```
-experimental-features = nix-command flakes
-```
+The following are intentionally future work rather than claims about the current repository:
 
-### Git user name/email not set
-
-Edit `home-manager/programs/git.nix` and update:
-```nix
-userEmail = "your-email@example.com";
-userName = "Your Name";
-```
-
-Then:
-```bash
-home-manager switch --flake .#linux
-```
-
-### direnv not activating in shells
-
-Ensure you've run:
-```bash
-home-manager switch --flake .#linux
-```
-
-And restart your shell.
-
-### SSH key not working
-
-Verify the key file exists and permissions are correct:
-```bash
-ls -la ~/.ssh/id_ed25519_github
-ssh-keygen -y -f ~/.ssh/id_ed25519_github  # Should output public key
-```
-
-If the key is new, add it to GitHub: https://github.com/settings/keys
-
-## Future Work
-
-### Phase 1: Validate (Current)
-- [ ] Test on WSL2 Ubuntu
-- [ ] Verify all tools work as expected
-- [ ] Test Git and GitHub SSH integration
-- [ ] Test direnv with a simple project
-
-### Phase 2: Expand
-- [ ] Add more developer tools as needed
-- [ ] Fine-tune shell configuration
-- [ ] Test on GCP Compute Engine
-
-### Phase 3: Prepare for macOS
-- [ ] Test on macOS (when acquired)
-- [ ] Add Homebrew integration if desired
-- [ ] Update zsh configuration for macOS defaults
-
-### Phase 4: NixOS Migration
-- [ ] Create system-level flake for existing NixOS machine
-- [ ] Integrate den Home Manager configuration
-- [ ] Gradually migrate system configuration
-- [ ] Test and validate
-
-## Notes & Assumptions
-
-1. **Nix version:** This assumes a recent Nix with flakes support (nix 2.4+). WSL2 and GCP require manual installation.
-
-2. **Home Manager compatibility:** The `flake.lock` pins compatible versions of Home Manager and nixpkgs. If you encounter version mismatches, regenerate `flake.lock`:
-   ```bash
-   nix flake update
-   ```
-
-3. **Secrets are external:** SSH keys, credentials, and machine-specific configuration are **not** stored in this repository. Provision them separately.
-
-4. **Bash vs. Zsh:** Bash is currently the default, but both are configured. You can switch shells without recreating the environment:
-   ```bash
-   chsh -s /run/current-system/sw/bin/zsh   # On NixOS
-   chsh -s ~/.nix-profile/bin/zsh            # On WSL2/GCP
-   ```
-
-5. **Public repository:** This repository is intended to be public. Do not commit credentials, API keys, SSH private keys, or machine-specific secrets.
-
-6. **Python environment management:** `uv` is included for Python package/environment management. Projects can use their own `flake.nix` with `direnv` for reproducible development environments.
-
-7. **Docker on WSL2:** Docker Desktop or Docker-on-WSL will need to be installed and configured separately; `home-manager` provides the CLI tools but not the daemon.
-
-8. **State version:** Home Manager's `home.stateVersion` is set to `24.05`. Changing this requires careful migration; see [Home Manager docs](https://nix-community.github.io/home-manager/index.html#sec-flakes-standalone).
+- richer editor, terminal, font, application, and user-service modules;
+- additional host-specific settings as real differences appear;
+- Darwin-specific packaging and native integration;
+- a `home-nixos` host with NixOS system modules;
+- migration of the existing traditional NixOS configuration into a flake with Home Manager;
+- suitable Linux/WSL/GCP system-level configuration where it is useful;
+- a secrets solution only if external credential provisioning becomes insufficient.
 
 ## License
 
-MIT License - See LICENSE file for details.
-
-This repository structure is provided as a foundation for your personal development environment. You are free to modify, fork, or extend it as needed.
-
-## Contributing to Your Own Repository
-
-This is your personal repository. Contributions are for your own use. If you wish to share configurations or patterns, consider publishing a public reference version.
-
----
-
-For questions or issues, refer to:
-- [Home Manager Manual](https://nix-community.github.io/home-manager/)
-- [Nix Flakes Documentation](https://nixos.wiki/wiki/Flakes)
-- [nixpkgs Manual](https://nixos.org/nixpkgs/manual/)
+MIT. See [LICENSE](LICENSE).
