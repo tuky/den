@@ -1,6 +1,8 @@
 { config, pkgs, lib, ... }:
 
 {
+  nixpkgs.config.allowUnfree = true;
+
   imports = [
     # Import all program configurations
     ./programs/git.nix
@@ -12,7 +14,7 @@
   home.packages = with pkgs; [
     # Backend development languages
     go
-    nodejs_20
+    nodejs
     python312
     uv
 
@@ -20,7 +22,7 @@
     docker
     docker-compose
     terraform
-    google-cloud-cli
+    google-cloud-sdk
     github-cli
 
     # Utilities
