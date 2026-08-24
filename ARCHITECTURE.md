@@ -1,6 +1,6 @@
 # Architecture
 
-`den` describes what makes Tobias's machines mine. It is a personal configuration repository, not only a development-environment repository.
+`den` describes what makes these machines mine. It is a personal configuration repository, not only a development-environment repository.
 
 ## Composition
 
