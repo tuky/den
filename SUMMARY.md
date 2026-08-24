@@ -12,7 +12,7 @@
 
 ## Current configuration
 
-The shared Home Manager configuration provides Bash and zsh setup, Git defaults and aliases, GitHub SSH host configuration, direnv/nix-direnv, tmux, CLI utilities, language runtimes, cloud tools, Docker CLI tooling, and `uv`.
+The shared Home Manager configuration provides zsh setup with Starship, Git defaults and aliases, GitHub SSH host configuration, direnv/nix-direnv, tmux, CLI utilities, language runtimes, cloud tools, Docker CLI tooling, and `uv`.
 
 Git identity and all credentials are external because this is a public repository. The current shell remains unchanged until the user changes it outside `den`.
 
