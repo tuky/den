@@ -22,6 +22,14 @@ For WSL2 or GCP Ubuntu:
    home-manager switch --flake ~/.config/den#wsl
    ```
 
+   The repository CLI is then available as `den` from any directory:
+
+   ```bash
+   den status
+   den check
+   den switch wsl
+   ```
+
    GCP uses the analogous `.#gcp` host output.
 
 For macOS, install Nix with flakes enabled, clone the repository, provision credentials externally, and activate:

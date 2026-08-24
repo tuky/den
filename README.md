@@ -125,6 +125,17 @@ For GCP Ubuntu, use the same standalone Home Manager model with `.#gcp`. Access 
 
 ## Working on den
 
+After the first Home Manager activation, `den` is the primary interface for this repository and can be run from any directory:
+
+```bash
+den status
+den update
+den check
+den switch wsl
+```
+
+`den` locates the repository at `~/.config/den` instead of using the current working directory. `den update` only updates the lock file; it never switches the active configuration. The available host names are the flake's actual Home Manager outputs: `wsl`, `gcp`, and `macbook`.
+
 Use local, non-destructive checks while editing:
 
 ```bash

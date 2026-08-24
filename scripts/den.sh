@@ -1,58 +1,87 @@
 #!/usr/bin/env bash
-# Helper script for common den operations
-# Optional: Use `chmod +x scripts/den.sh` to make executable
 
 set -euo pipefail
 
 usage() {
     cat <<EOF
-den - Personal development environment helper
+den - Manage personal machine configuration
 
-Usage: den <command> [options]
+Usage: den <command>
 
 Commands:
   show              Show available configurations
-  update            Update flake inputs to latest versions
-  switch [config]   Apply Home Manager configuration (default: linux)
-  format            Format all .nix files
+  status            Show repository path and working-tree state
+  update            Update flake inputs (does not switch)
+  switch <host>     Apply a Home Manager host configuration
+  format            Format the flake
   check             Check flake for errors
   help              Show this help message
 
 Examples:
+  den status
   den show
   den update
-  den switch linux
-  den switch darwin
-  den format
   den check
-
-Environment:
-  Set DEN_FLAKE_PATH to override flake location (default: current directory)
+  den switch wsl
+  den format
 
 EOF
 }
 
-# Default to current directory if DEN_FLAKE_PATH not set
-FLAKE_PATH="${DEN_FLAKE_PATH:-.}"
+FLAKE_PATH="__DEN_FLAKE_PATH__"
+
+if [[ ! -f "${FLAKE_PATH}/flake.nix" ]]; then
+    SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    SOURCE_FLAKE_PATH="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
+    if [[ -f "${SOURCE_FLAKE_PATH}/flake.nix" ]]; then
+        FLAKE_PATH="$SOURCE_FLAKE_PATH"
+    fi
+fi
+
+if [[ ! -f "${FLAKE_PATH}/flake.nix" ]]; then
+    printf 'den: no flake.nix found at %s\n' "$FLAKE_PATH" >&2
+    exit 1
+fi
+
+status() {
+    local branch state
+    branch="$(git -C "$FLAKE_PATH" branch --show-current 2>/dev/null || true)"
+    state="$(git -C "$FLAKE_PATH" status --short 2>/dev/null)"
+
+    printf 'den\n'
+    printf '  repo:   %s\n' "$FLAKE_PATH"
+    printf '  branch: %s\n' "${branch:-detached}"
+    if [[ -n "$state" ]]; then
+        printf '  state:  modified\n'
+    else
+        printf '  state:  clean\n'
+    fi
+}
 
 case "${1:-help}" in
     show)
-        echo "Available Home Manager configurations:"
+        echo "Available den configurations:"
         nix flake show "$FLAKE_PATH"
         ;;
+    status)
+        status
+        ;;
     update)
-        echo "Updating flake inputs..."
-        nix flake update "$FLAKE_PATH"
-        echo "Done. Review changes with: git diff flake.lock"
+        echo "Updating den flake inputs..."
+        nix flake update --flake "$FLAKE_PATH"
+        echo "Done. Review changes before switching."
         ;;
     switch)
-        config="${2:-linux}"
-        echo "Switching to $config configuration..."
-        home-manager switch --flake "$FLAKE_PATH#$config"
-        echo "Done. Restart your shell to apply all changes."
+        if [[ $# -ne 2 ]]; then
+            echo "Usage: den switch <host>" >&2
+            exit 2
+        fi
+        host="$2"
+        echo "Switching den host: $host"
+        home-manager switch --flake "$FLAKE_PATH#$host"
         ;;
     format)
-        echo "Formatting Nix files..."
+        echo "Formatting den..."
         nix fmt "$FLAKE_PATH"
         echo "Done."
         ;;
@@ -65,7 +94,7 @@ case "${1:-help}" in
         usage
         ;;
     *)
-        echo "Unknown command: $1"
+        echo "Unknown command: $1" >&2
         echo ""
         usage
         exit 1
