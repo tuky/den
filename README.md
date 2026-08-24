@@ -76,7 +76,7 @@ That migration will happen after the standalone Home Manager setup has been test
 
 The current shared configuration includes:
 
-- zsh as the only managed interactive shell;
+- zsh as the only managed interactive shell, with a restrained Starship prompt and startup greeting;
 - the login shell remains an external machine setting and is not changed by `den`;
 - Git defaults and aliases, without hard-coding Git identity;
 - GitHub SSH configuration using `~/.ssh/id_ed25519_github`;

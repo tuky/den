@@ -33,6 +33,6 @@ The existing NixOS machine is deliberately outside the current outputs. Its even
 - Keep host files small; add structure only when a real host difference appears.
 - Keep identity and credentials outside this public repository.
 - Configure the GitHub SSH identity path, but never create or store its private key.
-- Keep Bash as the current shell while sharing shell behavior with zsh for a future transition.
+- Keep zsh as the only managed interactive shell; the login shell remains an external machine setting.
 - Use Nix for reproducible tools where practical, including `uv` for Python environments.
 - Treat Docker's CLI and daemon as separate concerns.
