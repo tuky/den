@@ -14,6 +14,7 @@
     # Containers, infrastructure, and cloud
     docker
     docker-compose
+    devbox
     terraform
     google-cloud-sdk
     github-cli
