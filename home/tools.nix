@@ -7,6 +7,7 @@
     # Languages and runtimes
     go
     nodejs
+    pnpm
     python312
     uv
 
