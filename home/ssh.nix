@@ -12,6 +12,14 @@
         AddKeysToAgent = "yes";
         ServerAliveInterval = 60;
       };
+      "gcp" = {
+        HostName = "136.92.15.242";
+        IdentityFile = "~/.ssh/google_compute_engine";
+        IdentitiesOnly = "yes";
+        AddKeysToAgent = "yes";
+        HostKeyAlias = "compute.8301497291641052697";
+        CheckHostIP = "no";
+      };
     };
   };
 }
