@@ -27,5 +27,6 @@
     curl
     wget
     openssh
+    unzip
   ];
 }
