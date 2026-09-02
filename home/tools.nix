@@ -19,6 +19,7 @@
     google-cloud-sdk
     github-cli
     home-manager
+    livekit-cli
 
     # Everyday command-line tools
     tmux
