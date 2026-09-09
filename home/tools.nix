@@ -10,6 +10,7 @@
     pnpm
     python312
     uv
+    bubblewrap
 
     # Containers, infrastructure, and cloud
     docker
@@ -20,6 +21,7 @@
     github-cli
     home-manager
     livekit-cli
+    bitwarden-cli
 
     # Everyday command-line tools
     tmux
