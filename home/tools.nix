@@ -10,7 +10,6 @@
     pnpm
     python312
     uv
-    bubblewrap
 
     # Containers, infrastructure, and cloud
     docker
