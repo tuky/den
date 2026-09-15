@@ -32,5 +32,6 @@
     wget
     openssh
     unzip
+    htop
   ];
 }
