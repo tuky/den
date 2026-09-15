@@ -18,12 +18,12 @@
           value = function system;
         }) supportedSystems);
 
-      mkHomeConfiguration = system: modules: homeDirectory:
+      mkHomeConfiguration = system: modules: username: homeDirectory:
         home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${system};
           modules = modules ++ [
             {
-              home.username = "tobias";
+              home.username = username;
               home.homeDirectory = homeDirectory;
               # Stable Home Manager schema baseline, independent of input versions.
               home.stateVersion = "26.05";
@@ -37,17 +37,17 @@
           ./home/default.nix
           ./modules/linux/default.nix
           ./hosts/wsl.nix
-        ] "/home/tobias";
+        ] "tobias" "/home/tobias";
         gcp = mkHomeConfiguration "x86_64-linux" [
           ./home/default.nix
           ./modules/linux/default.nix
           ./hosts/gcp.nix
-        ] "/home/tobias";
+        ] "tobias" "/home/tobias";
         macbook = mkHomeConfiguration "aarch64-darwin" [
           ./home/default.nix
           ./modules/darwin/default.nix
           ./hosts/macbook.nix
-        ] "/Users/tobias";
+        ] "tobiaskroenke" "/Users/tobiaskroenke";
       };
 
       devShells = forEachSystem (system: {
