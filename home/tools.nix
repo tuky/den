@@ -12,6 +12,7 @@
     uv
 
     # Containers, infrastructure, and cloud
+    colima
     docker
     docker-compose
     devbox
