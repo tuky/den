@@ -8,7 +8,7 @@
     go
     nodejs
     pnpm
-    python312
+    python314
     uv
 
     # Containers, infrastructure, and cloud
@@ -22,6 +22,7 @@
     home-manager
     livekit-cli
     bitwarden-cli
+    awscli2
 
     # Everyday command-line tools
     tmux
