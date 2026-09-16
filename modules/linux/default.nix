@@ -1,6 +1,6 @@
 { ... }:
 
 {
-  # Shared by Linux hosts; host files contain WSL/GCP differences.
+  # Shared by Linux hosts
   systemd.user.startServices = "sd-switch";
 }

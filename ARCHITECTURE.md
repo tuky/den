@@ -16,11 +16,10 @@ den
 ├── modules/linux/        reusable Linux behavior
 ├── modules/darwin/       reusable macOS behavior
 ├── hosts/wsl.nix         WSL2-specific choices
-├── hosts/gcp.nix         GCP-specific choices
 └── hosts/macbook.nix     MacBook-specific choices
 ```
 
-Platforms describe reusable operating-system behavior. Hosts describe actual environments. WSL2 and GCP therefore share Linux modules without becoming one configuration.
+Platforms describe reusable operating-system behavior. Hosts describe actual environments.
 
 ## Boundaries
 

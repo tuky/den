@@ -22,6 +22,7 @@
     ./ssh.nix
     ./shell.nix
     ./direnv.nix
+    ./claude.nix
   ];
 
   home.stateVersion = "26.05";
