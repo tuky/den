@@ -6,8 +6,8 @@
 
 - `home/` contains shared Home Manager modules.
 - `modules/linux/` and `modules/darwin/` contain reusable platform behavior.
-- `hosts/wsl.nix`, `hosts/gcp.nix`, and `hosts/macbook.nix` are concrete host entry points.
-- `flake.nix` exposes `homeConfigurations.wsl`, `.gcp`, and `.macbook`.
+- `hosts/wsl.nix` and `hosts/macbook.nix` are concrete host entry points.
+- `flake.nix` exposes `homeConfigurations.wsl` and `.macbook`.
 - `home-nixos` and NixOS system modules are intentionally deferred.
 
 ## Current configuration
@@ -19,7 +19,7 @@ Git identity and all credentials are external because this is a public repositor
 ## Roadmap
 
 1. Validate the `wsl` host on the existing WSL2 Ubuntu environment.
-2. Add only real host-specific differences for GCP and macOS as those machines appear.
+2. Add only real host-specific differences for macOS as those machines appear.
 3. Expand user-level application, editor, terminal, font, and service modules where useful.
 4. Create the eventual NixOS flake and integrate Home Manager without modifying the current NixOS configuration prematurely.
 

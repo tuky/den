@@ -7,11 +7,12 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    codex-cli-nix.url = "github:sadjow/codex-cli-nix";
   };
 
-  outputs = { self, nixpkgs, home-manager }:
+  outputs = inputs@{ self, nixpkgs, home-manager, codex-cli-nix }:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-darwin" ];
       forEachSystem = function:
         builtins.listToAttrs (map (system: {
           name = system;
@@ -21,6 +22,7 @@
       mkHomeConfiguration = system: modules: username: homeDirectory:
         home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${system};
+          extraSpecialArgs = { inherit inputs; };
           modules = modules ++ [
             {
               home.username = username;
@@ -38,11 +40,6 @@
           ./modules/linux/default.nix
           ./hosts/wsl.nix
         ] "tobias" "/home/tobias";
-        gcp = mkHomeConfiguration "x86_64-linux" [
-          ./home/default.nix
-          ./modules/linux/default.nix
-          ./hosts/gcp.nix
-        ] "tobias" "/home/tobias";
         macbook = mkHomeConfiguration "aarch64-darwin" [
           ./home/default.nix
           ./modules/darwin/default.nix
@@ -55,6 +52,7 @@
           buildInputs = with nixpkgs.legacyPackages.${system}; [
             nixpkgs-fmt
             nix-update
+            codex-cli-nix.packages.${system}.default
           ];
         };
       });

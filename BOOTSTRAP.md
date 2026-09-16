@@ -4,7 +4,7 @@ This document describes the intended manual flow. It does not install software, 
 
 ## Standalone Home Manager hosts
 
-For WSL2 or GCP Ubuntu:
+For WSL2 Ubuntu:
 
 1. Install Nix on the Ubuntu machine and enable flakes.
 2. Install or invoke Home Manager.
@@ -29,8 +29,6 @@ For WSL2 or GCP Ubuntu:
    den check
    den switch wsl
    ```
-
-   GCP uses the analogous `.#gcp` host output.
 
 For macOS, install Nix with flakes enabled, clone the repository, provision credentials externally, and activate:
 

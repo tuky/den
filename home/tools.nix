@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   nixpkgs.config.allowUnfree = true;
@@ -33,5 +33,8 @@
     openssh
     unzip
     htop
+
+    # AI
+    inputs.codex-cli-nix.packages.${pkgs.system}.default
   ];
 }
