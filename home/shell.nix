@@ -27,7 +27,7 @@ let
         Darwin) os_name="macOS" ;;
       esac
 
-      printf '╭─ den · %s\n' "$(hostname -s 2>/dev/null || hostname)"
+      printf '╭─ den\n'
       printf '│ %s · %s · zsh\n' "$os_name" "$(uname -m)"
       if (( $+commands[nix] && $+commands[home-manager] )); then
         printf '│ Nix · Home Manager\n'
@@ -36,7 +36,7 @@ let
       else
         printf '│ Nix not found\n'
       fi
-      printf '╰─ %s@%s:%s\n' "$USER" "$(hostname -s 2>/dev/null || hostname)" "$PWD"
+      printf '╰─ ready\n'
     }
 
     den_welcome
@@ -47,19 +47,8 @@ in
     enable = true;
     settings = {
       add_newline = false;
-      format = "$username@$hostname $directory$git_branch$git_status$python$nodejs$golang$terraform$docker_context$fill$cmd_duration$line_break$character";
+      format = "$directory$git_branch$git_status$python$nodejs$golang$terraform$docker_context$fill$cmd_duration$line_break$character";
       fill.symbol = "·";
-      username = {
-        show_always = true;
-        style_user = "cyan";
-        style_root = "red";
-        format = "[$user]($style)";
-      };
-      hostname = {
-        ssh_only = false;
-        style = "yellow";
-        format = "[@$hostname]($style) ";
-      };
       directory = {
         truncation_length = 3;
         style = "blue";

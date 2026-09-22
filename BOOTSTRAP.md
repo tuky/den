@@ -13,13 +13,13 @@ For WSL2 Ubuntu:
 5. Inspect and activate the concrete host:
 
    ```bash
-   nix run .#home-manager -- switch -b backup --flake .#wsl
+   nix run .#home-manager -- switch --impure -b backup --flake .#wsl
    ```
 
    The backup flag handles existing Home Manager target files during the first activation. Afterward, use the installed command:
 
    ```bash
-   home-manager switch --flake ~/.config/den#wsl
+   home-manager switch --impure --flake ~/.config/den#wsl
    ```
 
    The repository CLI is then available as `den` from any directory:
@@ -33,7 +33,7 @@ For WSL2 Ubuntu:
 For macOS, install Nix with flakes enabled, clone the repository, provision credentials externally, and activate:
 
 ```bash
-nix run .#home-manager -- switch -b backup --flake .#macbook
+nix run .#home-manager -- switch --impure -b backup --flake .#macbook
 ```
 
 Activation is deliberately explicit. Restart the shell afterward if the generated shell configuration needs to be loaded. The configured Docker CLI does not install a Docker daemon; use the platform's appropriate Docker setup.

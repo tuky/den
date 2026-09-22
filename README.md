@@ -8,8 +8,8 @@ Development tools are an important part of `den`, but they are one category with
 
 | Host | Platform | Current status | Activation |
 | --- | --- | --- | --- |
-| `wsl` | Ubuntu on WSL2 | First test host; Home Manager configuration is implemented | `home-manager switch --flake .#wsl` |
-| `macbook` | macOS | Planned host entry; Darwin module is minimal | `home-manager switch --flake .#macbook` |
+| `wsl` | Ubuntu on WSL2 | First test host; Home Manager configuration is implemented | `home-manager switch --impure --flake .#wsl` |
+| `macbook` | macOS | Planned host entry; Darwin module is minimal | `home-manager switch --impure --flake .#macbook` |
 | `home-nixos` | NixOS | Existing machine; migration is deferred | Not exposed yet |
 
 The commands above are the eventual activation commands. This repository does not bootstrap or modify any machine automatically.
@@ -107,13 +107,13 @@ This is documentation for a future/manual activation; it does not run anything a
 4. Inspect the configuration, then activate the WSL host:
 
     ```bash
-    nix run .#home-manager -- switch -b backup --flake .#wsl
+    nix run .#home-manager -- switch --impure -b backup --flake .#wsl
     ```
 
     The backup flag is for the first activation when Home Manager takes ownership of existing files. After activation, use the installed command for later changes:
 
     ```bash
-    home-manager switch --flake ~/.config/den#wsl
+    home-manager switch --impure --flake ~/.config/den#wsl
     ```
 
 5. Restart the shell if needed and verify the tools relevant to that machine.
@@ -134,9 +134,9 @@ den switch wsl
 Use local, non-destructive checks while editing:
 
 ```bash
-nix flake check
+nix flake check --impure
 nix fmt
-nix flake show
+nix flake show --impure
 ```
 
 Home Manager configurations can be evaluated without activating them through their `activationPackage` output. `home.stateVersion = "26.05"` is a deliberate stable schema baseline for this new configuration; it is independent of the nixpkgs and Home Manager input versions and should only change as part of a planned migration. The lock file should be committed when inputs are intentionally updated.
@@ -156,3 +156,15 @@ The following are intentionally future work rather than claims about the current
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Local identity
+
+When upgrading from a version that hard-coded local identity, activate once using the repository script so the new `den` command is installed:
+
+```bash
+bash ~/.config/den/scripts/den.sh switch macbook
+```
+
+Use `wsl` instead on WSL. Subsequent activations can use `den switch <host>` as usual.
+
+Home Manager reads `USER` and `HOME` from the local environment. Evaluation requires `--impure`; `den show`, `den check`, and `den switch` supply it automatically. Run activation as your own user. Usernames and home directories are not stored in the flake. Generated Home Manager files and diagnostic output may still contain local absolute paths. The shell greeting and prompt omit the username and hostname, and `den status` abbreviates the home directory as `~`.

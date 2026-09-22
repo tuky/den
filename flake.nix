@@ -19,7 +19,13 @@
           value = function system;
         }) supportedSystems);
 
-      mkHomeConfiguration = system: modules: username: homeDirectory:
+      # Local identity is supplied at evaluation time, never stored in the flake.
+      username = builtins.getEnv "USER";
+      homeDirectory = builtins.getEnv "HOME";
+      mkHomeConfiguration = system: modules:
+        if username == "" || homeDirectory == "" then
+          throw "den: local identity is unavailable. Use --impure with USER and HOME set. To upgrade an older den command, run: bash ~/.config/den/scripts/den.sh switch <host>"
+        else
         home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${system};
           extraSpecialArgs = { inherit inputs; };
@@ -39,12 +45,12 @@
           ./home/default.nix
           ./modules/linux/default.nix
           ./hosts/wsl.nix
-        ] "user" "/home/user";
+        ];
         macbook = mkHomeConfiguration "aarch64-darwin" [
           ./home/default.nix
           ./modules/darwin/default.nix
           ./hosts/macbook.nix
-        ] "user" "/Users/user";
+        ];
       };
 
       devShells = forEachSystem (system: {

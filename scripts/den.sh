@@ -28,7 +28,7 @@ Examples:
 EOF
 }
 
-FLAKE_PATH="__DEN_FLAKE_PATH__"
+FLAKE_PATH="${HOME}/.config/den"
 
 if [[ ! -f "${FLAKE_PATH}/flake.nix" ]]; then
     SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -39,7 +39,7 @@ if [[ ! -f "${FLAKE_PATH}/flake.nix" ]]; then
 fi
 
 if [[ ! -f "${FLAKE_PATH}/flake.nix" ]]; then
-    printf 'den: no flake.nix found at %s\n' "$FLAKE_PATH" >&2
+    printf 'den: no flake.nix found at %s\n' "~${FLAKE_PATH#"$HOME"}" >&2
     exit 1
 fi
 
@@ -49,7 +49,7 @@ status() {
     state="$(git -C "$FLAKE_PATH" status --short 2>/dev/null)"
 
     printf 'den\n'
-    printf '  repo:   %s\n' "$FLAKE_PATH"
+    printf '  repo:   %s\n' "~${FLAKE_PATH#"$HOME"}"
     printf '  branch: %s\n' "${branch:-detached}"
     if [[ -n "$state" ]]; then
         printf '  state:  modified\n'
@@ -61,7 +61,7 @@ status() {
 case "${1:-help}" in
     show)
         echo "Available den configurations:"
-        nix flake show "$FLAKE_PATH"
+        nix flake show --impure "$FLAKE_PATH"
         ;;
     status)
         status
@@ -78,7 +78,7 @@ case "${1:-help}" in
         fi
         host="$2"
         echo "Switching den host: $host"
-        home-manager switch --flake "$FLAKE_PATH#$host"
+        home-manager switch --impure --flake "$FLAKE_PATH#$host"
         ;;
     format)
         echo "Formatting den..."
@@ -87,7 +87,7 @@ case "${1:-help}" in
         ;;
     check)
         echo "Checking flake for errors..."
-        nix flake check "$FLAKE_PATH"
+        nix flake check --impure "$FLAKE_PATH"
         echo "No errors found."
         ;;
     help|--help|-h)
