@@ -1,0 +1,60 @@
+name: Check den
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  home-manager:
+    name: Build ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: wsl
+            runner: ubuntu-24.04
+            system: x86_64-linux
+          - host: macbook
+            runner: macos-15
+            system: aarch64-darwin
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify runner and local identity
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          test "$(nix eval --impure --raw --expr builtins.currentSystem)" = "$EXPECTED_SYSTEM"
+          # den reads these values during impure Home Manager evaluation.
+          echo "USER=$(id -un)" >> "$GITHUB_ENV"
+          test -n "$HOME"
+
+      - name: Check shell syntax
+        run: bash -n scripts/den.sh
+
+      - name: Check flake
+        run: nix flake check --impure --no-update-lock-file --show-trace
+
+      # Flake checking alone does not build custom homeConfigurations outputs.
+      - name: Build Home Manager configuration
+        env:
+          DEN_HOST: ${{ matrix.host }}
+        run: nix build --impure --no-update-lock-file --no-link --print-build-logs ".#homeConfigurations.${DEN_HOST}.activationPackage"

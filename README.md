@@ -141,6 +141,18 @@ nix flake show --impure
 
 Home Manager configurations can be evaluated without activating them through their `activationPackage` output. `home.stateVersion = "26.05"` is a deliberate stable schema baseline for this new configuration; it is independent of the nixpkgs and Home Manager input versions and should only change as part of a planned migration. The lock file should be committed when inputs are intentionally updated.
 
+## GitHub Actions
+
+The `Check den` workflow runs on pushes, pull requests, and manual dispatches.
+It checks shell syntax and the flake, then builds each Home Manager activation
+package on its native architecture: Ubuntu x86-64 for `wsl` and macOS ARM64 for
+`macbook`. The Linux build validates the WSL user configuration, not WSL runtime
+integration. CI never activates a configuration or updates `flake.lock`.
+
+Evaluation uses the runner's local username and home directory with `--impure`,
+just like local use. Actions are pinned to commit hashes and receive read-only
+repository permissions. No additional repository secrets are required.
+
 ## Deferred work
 
 The following are intentionally future work rather than claims about the current repository:
