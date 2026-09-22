@@ -143,6 +143,10 @@ It checks shell syntax and the flake, then builds the `macbook` Home Manager
 activation package on macOS ARM64. CI never activates a configuration or updates
 `flake.lock`.
 
+Builds use a host matrix. The final `CI` job succeeds only when every matrix build
+succeeds; failed, cancelled, or skipped builds do not pass the gate. The Main
+ruleset requires only `CI`, so adding machines needs no branch-rule changes.
+
 Evaluation uses the runner's local username and home directory with `--impure`,
 just like local use. Actions are pinned to commit hashes and receive read-only
 repository permissions. No additional repository secrets are required.
@@ -157,7 +161,7 @@ It never checks out or executes PR code. Local activation remains manual.
 
 Before enabling this workflow on the default branch, configure the repository:
 
-- Require the CI checks on `main` using branch protection or a ruleset. Auto-merge
+- Require the `CI` check on `main` using branch protection or a ruleset. Auto-merge
   waits for **required** checks, not every workflow that happens to be running.
 - Enable **Allow auto-merge** and squash merging in repository Settings → General.
 - Enable **Allow GitHub Actions to create and approve pull requests** in

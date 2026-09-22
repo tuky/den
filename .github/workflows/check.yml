@@ -14,9 +14,16 @@ concurrency:
 
 jobs:
   home-manager:
-    name: Build macbook
-    runs-on: macos-26
+    name: Build ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: macbook
+            runner: macos-26
+            system: aarch64-darwin
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -30,7 +37,7 @@ jobs:
 
       - name: Verify runner and local identity
         env:
-          EXPECTED_SYSTEM: aarch64-darwin
+          EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
           test "$(nix eval --impure --raw --expr builtins.currentSystem)" = "$EXPECTED_SYSTEM"
           # den reads these values during impure Home Manager evaluation.
@@ -46,5 +53,18 @@ jobs:
       # Flake checking alone does not build custom homeConfigurations outputs.
       - name: Build Home Manager configuration
         env:
-          DEN_HOST: macbook
+          DEN_HOST: ${{ matrix.host }}
         run: nix build --impure --no-update-lock-file --no-link --print-build-logs ".#homeConfigurations.${DEN_HOST}.activationPackage"
+
+  ci:
+    name: CI
+    needs: home-manager
+    # Run even when a build fails or is skipped; a skipped gate can satisfy rules.
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every matrix build to succeed
+        env:
+          BUILD_RESULT: ${{ needs.home-manager.result }}
+        run: test "$BUILD_RESULT" = success

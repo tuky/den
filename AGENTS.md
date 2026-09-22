@@ -56,8 +56,10 @@ Report what passed and any checks you could not run.
 Keep build logic in `check.yml`. Dependabot PRs are approved and marked for native
 auto-merge; required checks in GitHub's branch rules control when they merge.
 Do not duplicate the build matrix in the merge workflow. Never check out or run
-PR code in its privileged `pull_request_target` workflow. If renaming CI jobs,
-account for their names in repository required-check settings.
+PR code in its privileged `pull_request_target` workflow. The stable `CI` job
+aggregates the build matrix and is the sole required CI check in the Main ruleset.
+Add machines to the matrix without adding branch rules. Keep the gate's `always()`
+condition and explicit success check so failed or skipped builds cannot pass it.
 
 As you develop the project, update this file whenever architecture, commands,
 ownership, or workflows change. Correct stale guidance and record useful recurring
