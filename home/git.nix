@@ -26,6 +26,7 @@
         last = "log -1 HEAD";
         visual = "log --graph --oneline --all";
         amend = "commit --amend --no-edit";
+        feature = ''!f() { git switch main && git pull --ff-only && git switch -c "feature/$1"; }; f'';
       };
     };
 
