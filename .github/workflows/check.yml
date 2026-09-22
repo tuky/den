@@ -25,7 +25,7 @@ jobs:
             runner: ubuntu-24.04
             system: x86_64-linux
           - host: macbook
-            runner: macos-15
+            runner: macos-26
             system: aarch64-darwin
     steps:
       - name: Check out repository
