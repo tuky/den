@@ -30,7 +30,7 @@ The existing NixOS machine is deliberately outside the current outputs. Its even
 ## Design choices
 
 - Keep host files small; add structure only when a real host difference appears.
-- Keep identity and credentials outside this public repository.
+- Keep machine account identity and credentials outside this public repository; manage public Git attribution in `home/git.nix`.
 - Configure the GitHub SSH identity path, but never create or store its private key.
 - Keep zsh as the only managed interactive shell; the login shell remains an external machine setting.
 - Use Nix for reproducible tools where practical, including `uv` for Python environments.

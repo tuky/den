@@ -9,10 +9,10 @@ Development tools are an important part of `den`, but they are one category with
 | Host | Platform | Current status | Activation |
 | --- | --- | --- | --- |
 | `wsl` | Ubuntu on WSL2 | First test host; Home Manager configuration is implemented | `home-manager switch --impure --flake .#wsl` |
-| `macbook` | macOS | Planned host entry; Darwin module is minimal | `home-manager switch --impure --flake .#macbook` |
+| `macbook` | macOS | Active; Home Manager manages the user environment | `home-manager switch --impure --flake .#macbook` |
 | `home-nixos` | NixOS | Existing machine; migration is deferred | Not exposed yet |
 
-The commands above are the eventual activation commands. This repository does not bootstrap or modify any machine automatically.
+The MacBook is already managed. Activation remains explicit; the repository does not bootstrap machines automatically.
 
 ## Architecture
 
@@ -75,7 +75,7 @@ The current shared configuration includes:
 
 - zsh as the only managed interactive shell, with a restrained Starship prompt and startup greeting;
 - the login shell remains an external machine setting and is not changed by `den`;
-- Git defaults and aliases, without hard-coding Git identity;
+- Git defaults, aliases, and the public Git identity configured in `home/git.nix`;
 - GitHub SSH configuration using `~/.ssh/id_ed25519_github`;
 - direnv with nix-direnv integration;
 - tmux, jq, yq, curl, wget, and OpenSSH;
@@ -92,7 +92,7 @@ This is a public repository. It contains only declarative, non-secret defaults. 
 
 - never commit private SSH keys, API keys, tokens, passwords, cloud credentials, or service-account files;
 - the GitHub private key is expected at `~/.ssh/id_ed25519_github`, but is never created or stored here;
-- Git name and email must be configured through an external or local machine-specific mechanism;
+- Git name and the GitHub noreply email are managed in `home/git.nix`; these are public attribution settings, not credentials;
 - no secrets-management framework is added until there is a concrete need for one.
 
 SSH configuration is kept modular so the authentication strategy can change later without restructuring the rest of the repository.
@@ -168,3 +168,25 @@ bash ~/.config/den/scripts/den.sh switch macbook
 Use `wsl` instead on WSL. Subsequent activations can use `den switch <host>` as usual.
 
 Home Manager reads `USER` and `HOME` from the local environment. Evaluation requires `--impure`; `den show`, `den check`, and `den switch` supply it automatically. Run activation as your own user. Usernames and home directories are not stored in the flake. Generated Home Manager files and diagnostic output may still contain local absolute paths. The shell greeting and prompt omit the username and hostname, and `den status` abbreviates the home directory as `~`.
+
+## iTerm on macOS
+
+Home Manager manages iTerm's default profile, light/dark colors, Monaco 12 font,
+keyboard and pointer behavior, and existing Claude Code profile triggers.
+The reviewed settings live in `modules/darwin/iterm2/preferences.json`.
+The profile's home directory is supplied locally at evaluation time.
+
+The Darwin module generates `~/.config/iterm2/den/com.googlecode.iterm2.plist`
+and enables iTerm's [custom preferences folder](https://iterm2.com/documentation-preferences-general.html).
+iTerm itself remains a native application installed outside `den`.
+Quit iTerm before running `den switch macbook`, then reopen it to load settings.
+Use another terminal for activation if necessary; activation never quits sessions.
+
+Edit the JSON and switch to persist changes. The generated preferences file is
+read-only: if iTerm offers to save GUI changes back to the folder, decline.
+Window positions, history, installation metadata, saved review prompts, workgroups,
+and credentials are not captured in the repository. Existing application state
+remains local. Keep a local preferences backup before the first migration.
+
+VS Code settings and extensions remain managed through its existing Settings Sync,
+not through `den`.
