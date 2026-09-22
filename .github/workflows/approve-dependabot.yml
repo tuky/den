@@ -1,0 +1,74 @@
+name: Approve checked Dependabot PRs
+
+on:
+  workflow_run:
+    workflows: [Check den]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+concurrency:
+  group: dependabot-approval-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # This privileged workflow never checks out or executes PR code/artifacts.
+      - name: Verify checks and approve the tested commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=$(jq -r '.workflow_run.id' "$GITHUB_EVENT_PATH")
+          tested_sha=$(jq -r '.workflow_run.head_sha' "$GITHUB_EVENT_PATH")
+
+          # Require both actual builds, not just a successful/empty workflow.
+          jobs=$(gh api --paginate --slurp "repos/$GH_REPO/actions/runs/$run_id/jobs")
+          if ! jq -e '
+            [.[].jobs[]] as $jobs |
+            all(["Build wsl", "Build macbook"][];
+              . as $name | any($jobs[]; .name == $name and .conclusion == "success"))
+          ' <<< "$jobs" > /dev/null; then
+            echo "Both host builds must succeed; skipping approval."
+            exit 0
+          fi
+
+          for number in $(jq -r '.workflow_run.pull_requests[].number' "$GITHUB_EVENT_PATH"); do
+            pr=$(gh api "repos/$GH_REPO/pulls/$number")
+            if ! jq -e --arg repo "$GH_REPO" --arg sha "$tested_sha" '
+              .state == "open" and .draft == false and
+              .user.login == "dependabot[bot]" and .user.type == "Bot" and
+              .head.repo.full_name == $repo and .base.repo.full_name == $repo and
+              .head.sha == $sha
+            ' <<< "$pr" > /dev/null; then
+              echo "PR #$number is not an eligible Dependabot PR at the tested commit."
+              continue
+            fi
+
+            reviews=$(gh api --paginate --slurp "repos/$GH_REPO/pulls/$number/reviews")
+            if jq -e --arg sha "$tested_sha" '
+              any(.[][]; .user.login == "github-actions[bot]" and
+                .state == "APPROVED" and .commit_id == $sha)
+            ' <<< "$reviews" > /dev/null; then
+              echo "PR #$number is already approved at this commit."
+              continue
+            fi
+
+            # Bind approval to the tested commit even if the PR changes meanwhile.
+            gh api --method POST "repos/$GH_REPO/pulls/$number/reviews" \
+              -f event=APPROVE -f commit_id="$tested_sha" \
+              -f body="Both Check den host builds passed for commit $tested_sha." \
+              > /dev/null
+            echo "Approved PR #$number at $tested_sha."
+          done

@@ -153,6 +153,20 @@ Evaluation uses the runner's local username and home directory with `--impure`,
 just like local use. Actions are pinned to commit hashes and receive read-only
 repository permissions. No additional repository secrets are required.
 
+### Dependency updates and approval
+
+Dependabot checks Nix flake inputs and GitHub Actions weekly, grouping updates
+into one PR per ecosystem. The `Approve checked Dependabot PRs` workflow approves
+open, non-draft Dependabot PRs only after both `Check den` host builds succeed
+for the PR's current head commit. It does not merge PRs or activate configurations.
+The approval workflow never checks out PR code or downloads build artifacts.
+
+The approval workflow must be on the default branch. In repository Settings →
+Actions → General → Workflow permissions, enable **Allow GitHub Actions to create
+and approve pull requests**. Organization policy may restrict this setting.
+No personal access token is needed. To prevent an older approval from counting
+after later commits, enable dismissal of stale approvals in branch protection.
+
 ## Deferred work
 
 The following are intentionally future work rather than claims about the current repository:
