@@ -29,7 +29,7 @@ jobs:
             system: aarch64-darwin
     steps:
       - name: Check out repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout
         with:
           persist-credentials: false
 
