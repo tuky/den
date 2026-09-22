@@ -153,19 +153,23 @@ Evaluation uses the runner's local username and home directory with `--impure`,
 just like local use. Actions are pinned to commit hashes and receive read-only
 repository permissions. No additional repository secrets are required.
 
-### Dependency updates and approval
+### Dependency updates and merging
 
 Dependabot checks Nix flake inputs and GitHub Actions weekly, grouping updates
-into one PR per ecosystem. The `Approve checked Dependabot PRs` workflow approves
-open, non-draft Dependabot PRs only after both `Check den` host builds succeed
-for the PR's current head commit. It does not merge PRs or activate configurations.
-The approval workflow never checks out PR code or downloads build artifacts.
+into one PR per ecosystem. The `Enable Dependabot auto-merge` workflow approves
+Dependabot PRs and enables GitHub's native squash auto-merge. GitHub waits for
+required status checks and branch rules; the workflow contains no CI job list.
+It never checks out or executes PR code. Local activation remains manual.
 
-The approval workflow must be on the default branch. In repository Settings →
-Actions → General → Workflow permissions, enable **Allow GitHub Actions to create
-and approve pull requests**. Organization policy may restrict this setting.
-No personal access token is needed. To prevent an older approval from counting
-after later commits, enable dismissal of stale approvals in branch protection.
+Before enabling this workflow on the default branch, configure the repository:
+
+- Require the CI checks on `main` using branch protection or a ruleset. Auto-merge
+  waits for **required** checks, not every workflow that happens to be running.
+- Enable **Allow auto-merge** and squash merging in repository Settings → General.
+- Enable **Allow GitHub Actions to create and approve pull requests** in
+  Settings → Actions → General → Workflow permissions.
+
+No personal access token is needed.
 
 ## Deferred work
 
