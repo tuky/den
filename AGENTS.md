@@ -7,9 +7,9 @@ Start with `git status --short` and preserve unrelated user changes.
 ## Where changes belong
 
 - `home/`: shared user settings and tools. Import new modules in `home/default.nix`.
-- `modules/darwin/` and `modules/linux/`: reusable platform-specific behavior.
+- `modules/darwin/`: reusable macOS behavior.
 - `hosts/`: small, concrete host differences.
-- `flake.nix`: composes `macbook` (`aarch64-darwin`) and `wsl` (`x86_64-linux`).
+- `flake.nix`: exposes only `macbook` (`aarch64-darwin`); do not restore retired hosts.
 - `scripts/den.sh`: the `den` CLI. It normally targets `~/.config/den`, not the current checkout.
 - `.github/`: CI, Dependabot updates, and native Dependabot auto-merge.
 
@@ -41,8 +41,7 @@ nix flake check --impure --no-update-lock-file
 nix build --impure --no-update-lock-file --no-link .#homeConfigurations.macbook.activationPackage
 ```
 
-Use `wsl` instead of `macbook` on x86-64 Linux. A flake check alone does not build
-the Home Manager outputs. On another platform, evaluate the host's
+A flake check alone does not build the Home Manager output. On another platform, evaluate the host's
 `activationPackage.drvPath` with `nix eval --impure --no-update-lock-file --raw`
 and leave the native build to CI. Do not claim evaluation proves runtime behavior.
 Git-backed flakes omit untracked files: use `path:.` as the flake reference when

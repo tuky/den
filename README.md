@@ -8,7 +8,6 @@ Development tools are an important part of `den`, but they are one category with
 
 | Host | Platform | Current status | Activation |
 | --- | --- | --- | --- |
-| `wsl` | Ubuntu on WSL2 | First test host; Home Manager configuration is implemented | `home-manager switch --impure --flake .#wsl` |
 | `macbook` | macOS | Active; Home Manager manages the user environment | `home-manager switch --impure --flake .#macbook` |
 | `home-nixos` | NixOS | Existing machine; migration is deferred | Not exposed yet |
 
@@ -19,15 +18,13 @@ The MacBook is already managed. Activation remains explicit; the repository does
 The repository separates three kinds of configuration:
 
 - **Common user configuration** in `home/`: shared Home Manager modules for tools, shell, Git, SSH, and direnv.
-- **Platform configuration** in `modules/`: reusable behavior for Linux and Darwin. A future `modules/nixos/` can contain NixOS system modules.
-- **Host configuration** in `hosts/`: concrete environments such as WSL2 and a MacBook. Host files stay small until a machine actually needs distinct settings.
+- **Platform configuration** in `modules/`: reusable behavior for macOS. A future `modules/nixos/` can contain NixOS system modules.
+- **Host configuration** in `hosts/`: concrete environments such as the MacBook. Host files stay small until a machine actually needs distinct settings.
 
 ```text
 den
 ├── common user configuration
 ├── platform modules
-│   ├── Linux
-│   │   ├── WSL2 host
 │   ├── Darwin
 │   │   └── MacBook host
 │   └── NixOS (future system modules)
@@ -48,18 +45,16 @@ den/
 │   ├── ssh.nix
 │   └── direnv.nix
 ├── modules/
-│   ├── linux/default.nix
 │   └── darwin/default.nix
 └── hosts/
-    ├── wsl.nix
     └── macbook.nix
 ```
 
-A host selects the shared `home/` modules, its platform module, and its own small host file. Linux is therefore a reusable platform, not a machine identity.
+A host selects the shared `home/` modules, its platform module, and its own small host file. Platform modules remain separate from machine identity.
 
 ## Nix and Home Manager
 
-The flake uses `nixpkgs` unstable and Home Manager. Ubuntu and macOS hosts use standalone Home Manager for user-level configuration. Their base operating system, Docker daemon, cloud login, and other machine services remain native to the platform unless later added deliberately.
+The flake uses `nixpkgs` unstable and Home Manager. The MacBook uses standalone Home Manager for user-level configuration. Its base operating system, Docker daemon, cloud login, and other machine services remain native to the platform unless later added deliberately.
 
 The existing home NixOS machine is intentionally not changed. Its eventual migration will combine:
 
@@ -67,7 +62,7 @@ The existing home NixOS machine is intentionally not changed. Its eventual migra
 - Home Manager, integrated as a NixOS module, for user-level configuration;
 - a host entry for `home-nixos`.
 
-That migration will happen after the standalone Home Manager setup has been tested on WSL2.
+That migration remains deferred; the MacBook is the only current host.
 
 ## Included configuration
 
@@ -84,7 +79,7 @@ The current shared configuration includes:
 
 `uv` remains the preferred Python package and environment manager. No nvm, pyenv, asdf, or mise layer is included.
 
-Docker is treated as a platform concern: installing the CLI does not claim to install or configure a daemon. For example, WSL2 may use Docker Desktop or a separately managed Docker service.
+Docker is treated as a platform concern: installing the CLI does not claim to install or configure a daemon. The MacBook includes Colima, whose runtime is managed separately.
 
 ## Credentials and public safety
 
@@ -97,23 +92,23 @@ This is a public repository. It contains only declarative, non-secret defaults. 
 
 SSH configuration is kept modular so the authentication strategy can change later without restructuring the rest of the repository.
 
-## First use on WSL2
+## First use on macOS
 
 This is documentation for a future/manual activation; it does not run anything automatically.
 
-1. Install Nix with flakes enabled on the Ubuntu/WSL2 machine.
+1. Install Nix with flakes enabled on the Mac.
 2. Clone this repository and enter it.
 3. Provision credentials separately, including the GitHub SSH key if needed.
-4. Inspect the configuration, then activate the WSL host:
+4. Inspect the configuration, then activate the MacBook host:
 
     ```bash
-    nix run .#home-manager -- switch --impure -b backup --flake .#wsl
+    nix run .#home-manager -- switch --impure -b backup --flake .#macbook
     ```
 
     The backup flag is for the first activation when Home Manager takes ownership of existing files. After activation, use the installed command for later changes:
 
     ```bash
-    home-manager switch --impure --flake ~/.config/den#wsl
+    home-manager switch --impure --flake ~/.config/den#macbook
     ```
 
 5. Restart the shell if needed and verify the tools relevant to that machine.
@@ -126,10 +121,10 @@ After the first Home Manager activation, `den` is the primary interface for this
 den status
 den update
 den check
-den switch wsl
+den switch macbook
 ```
 
-`den` locates the repository at `~/.config/den` instead of using the current working directory. `den update` only updates the lock file; it never switches the active configuration. The available host names are the flake's actual Home Manager outputs: `wsl`, and `macbook`.
+`den` locates the repository at `~/.config/den` instead of using the current working directory. `den update` only updates the lock file; it never switches the active configuration. The only current Home Manager host is `macbook`.
 
 Use local, non-destructive checks while editing:
 
@@ -144,10 +139,9 @@ Home Manager configurations can be evaluated without activating them through the
 ## GitHub Actions
 
 The `Check den` workflow runs on pushes, pull requests, and manual dispatches.
-It checks shell syntax and the flake, then builds each Home Manager activation
-package on its native architecture: Ubuntu x86-64 for `wsl` and macOS ARM64 for
-`macbook`. The Linux build validates the WSL user configuration, not WSL runtime
-integration. CI never activates a configuration or updates `flake.lock`.
+It checks shell syntax and the flake, then builds the `macbook` Home Manager
+activation package on macOS ARM64. CI never activates a configuration or updates
+`flake.lock`.
 
 Evaluation uses the runner's local username and home directory with `--impure`,
 just like local use. Actions are pinned to commit hashes and receive read-only
@@ -180,7 +174,6 @@ The following are intentionally future work rather than claims about the current
 - Darwin-specific packaging and native integration;
 - a `home-nixos` host with NixOS system modules;
 - migration of the existing traditional NixOS configuration into a flake with Home Manager;
-- suitable Linux/WSL system-level configuration where it is useful;
 - a secrets solution only if external credential provisioning becomes insufficient.
 
 ## License
@@ -195,7 +188,7 @@ When upgrading from a version that hard-coded local identity, activate once usin
 bash ~/.config/den/scripts/den.sh switch macbook
 ```
 
-Use `wsl` instead on WSL. Subsequent activations can use `den switch <host>` as usual.
+Subsequent activations can use `den switch <host>` as usual.
 
 Home Manager reads `USER` and `HOME` from the local environment. Evaluation requires `--impure`; `den show`, `den check`, and `den switch` supply it automatically. Run activation as your own user. Usernames and home directories are not stored in the flake. Generated Home Manager files and diagnostic output may still contain local absolute paths. The shell greeting and prompt omit the username and hostname, and `den status` abbreviates the home directory as `~`.
 

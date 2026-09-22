@@ -22,7 +22,7 @@ Examples:
   den show
   den update
   den check
-  den switch wsl
+  den switch macbook
   den format
 
 EOF

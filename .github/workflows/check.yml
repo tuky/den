@@ -14,19 +14,9 @@ concurrency:
 
 jobs:
   home-manager:
-    name: Build ${{ matrix.host }}
-    runs-on: ${{ matrix.runner }}
+    name: Build macbook
+    runs-on: macos-26
     timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - host: wsl
-            runner: ubuntu-24.04
-            system: x86_64-linux
-          - host: macbook
-            runner: macos-26
-            system: aarch64-darwin
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -40,7 +30,7 @@ jobs:
 
       - name: Verify runner and local identity
         env:
-          EXPECTED_SYSTEM: ${{ matrix.system }}
+          EXPECTED_SYSTEM: aarch64-darwin
         run: |
           test "$(nix eval --impure --raw --expr builtins.currentSystem)" = "$EXPECTED_SYSTEM"
           # den reads these values during impure Home Manager evaluation.
@@ -56,5 +46,5 @@ jobs:
       # Flake checking alone does not build custom homeConfigurations outputs.
       - name: Build Home Manager configuration
         env:
-          DEN_HOST: ${{ matrix.host }}
+          DEN_HOST: macbook
         run: nix build --impure --no-update-lock-file --no-link --print-build-logs ".#homeConfigurations.${DEN_HOST}.activationPackage"

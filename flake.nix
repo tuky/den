@@ -12,7 +12,7 @@
 
   outputs = inputs@{ self, nixpkgs, home-manager, codex-cli-nix }:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-darwin" ];
+      supportedSystems = [ "aarch64-darwin" ];
       forEachSystem = function:
         builtins.listToAttrs (map (system: {
           name = system;
@@ -41,11 +41,6 @@
     in
     {
       homeConfigurations = {
-        wsl = mkHomeConfiguration "x86_64-linux" [
-          ./home/default.nix
-          ./modules/linux/default.nix
-          ./hosts/wsl.nix
-        ];
         macbook = mkHomeConfiguration "aarch64-darwin" [
           ./home/default.nix
           ./modules/darwin/default.nix

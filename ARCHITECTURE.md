@@ -13,9 +13,7 @@ Each standalone Home Manager host in `flake.nix` combines:
 ```text
 den
 ├── home/                 shared user configuration
-├── modules/linux/        reusable Linux behavior
 ├── modules/darwin/       reusable macOS behavior
-├── hosts/wsl.nix         WSL2-specific choices
 └── hosts/macbook.nix     MacBook-specific choices
 ```
 
@@ -23,7 +21,7 @@ Platforms describe reusable operating-system behavior. Hosts describe actual env
 
 ## Boundaries
 
-Home Manager owns user-level files, programs, packages, shell setup, Git, SSH client configuration, direnv, and future user services/resources. Ubuntu and macOS system services remain native to those operating systems until there is a concrete reason to manage them with Nix.
+Home Manager owns user-level files, programs, packages, shell setup, Git, SSH client configuration, direnv, and future user services/resources. macOS system services remain native to those operating systems until there is a concrete reason to manage them with Nix.
 
 The existing NixOS machine is deliberately outside the current outputs. Its eventual host will combine NixOS system modules with Home Manager as a NixOS module. The existing traditional configuration is not changed as part of this repository work.
 

@@ -2,38 +2,22 @@
 
 This document describes the intended manual flow. It does not install software, change shells, provision credentials, or activate a machine automatically.
 
-## Standalone Home Manager hosts
+## MacBook
 
-For WSL2 Ubuntu:
-
-1. Install Nix on the Ubuntu machine and enable flakes.
-2. Install or invoke Home Manager.
-3. Clone `den` and enter the checkout.
-4. Provision SSH keys and other credentials outside the repository.
-5. Inspect and activate the concrete host:
-
-   ```bash
-   nix run .#home-manager -- switch --impure -b backup --flake .#wsl
-   ```
-
-   The backup flag handles existing Home Manager target files during the first activation. Afterward, use the installed command:
-
-   ```bash
-   home-manager switch --impure --flake ~/.config/den#wsl
-   ```
-
-   The repository CLI is then available as `den` from any directory:
-
-   ```bash
-   den status
-   den check
-   den switch wsl
-   ```
-
-For macOS, install Nix with flakes enabled, clone the repository, provision credentials externally, and activate:
+Install Nix with flakes enabled, clone the repository, provision credentials
+externally, and activate:
 
 ```bash
 nix run .#home-manager -- switch --impure -b backup --flake .#macbook
+```
+
+The backup flag handles existing Home Manager target files during first activation.
+Afterward, use `den` from any directory:
+
+```bash
+den status
+den check
+den switch macbook
 ```
 
 Activation is deliberately explicit. Restart the shell afterward if the generated shell configuration needs to be loaded. The configured Docker CLI does not install a Docker daemon; use the platform's appropriate Docker setup.
