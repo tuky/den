@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 
 let
   commonShellConfig = ''
@@ -76,13 +76,7 @@ in
   programs.zsh = {
     enable = true;
     initContent = commonShellConfig;
-    plugins = [
-      {
-        name = "zsh-syntax-highlighting";
-        src = pkgs.zsh-syntax-highlighting;
-        file = "share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh";
-      }
-    ];
+    syntaxHighlighting.enable = true;
     history = {
       size = 10000;
       save = 10000;

@@ -10,6 +10,7 @@ Start with `git status --short` and preserve unrelated user changes.
 - `modules/darwin/`: reusable macOS behavior.
 - `hosts/`: small, concrete host differences.
 - `flake.nix`: exposes only `macbook` (`aarch64-darwin`); do not restore retired hosts.
+  Use `nixpkgs-unstable` for macOS; add a separate `nixos-unstable` input when Linux is introduced.
 - `scripts/den.sh`: the `den` CLI. It normally targets `~/.config/den`, not the current checkout.
 - `.github/`: CI, Dependabot updates, and native Dependabot auto-merge.
 
@@ -25,7 +26,8 @@ not managed here yet. Prefer small modules and simple solutions over new abstrac
   Flake evaluation needs `USER`, `HOME`, and `--impure`.
 - Edit source files, not generated Home Manager files or Nix-store symlinks.
   iTerm's source is `modules/darwin/iterm2/preferences.json`.
-- Keep `home.stateVersion` unchanged unless deliberately migrating its schema.
+- Keep the authoritative `home.stateVersion` in `flake.nix` unchanged unless deliberately migrating its schema.
+  Let `programs.home-manager.enable` install the CLI from the Home Manager input.
   Update `flake.lock` only as part of an intended dependency update.
 - Building is not activation. Run `den switch <host>` only when applying changes
   is within the user's request; don't activate just to validate an edit.

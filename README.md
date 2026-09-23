@@ -54,7 +54,7 @@ A host selects the shared `home/` modules, its platform module, and its own smal
 
 ## Nix and Home Manager
 
-The flake uses `nixpkgs` unstable and Home Manager. The MacBook uses standalone Home Manager for user-level configuration. Its base operating system, Docker daemon, cloud login, and other machine services remain native to the platform unless later added deliberately.
+The flake uses `nixpkgs-unstable` for macOS and Home Manager. Future Linux hosts should use a separate `nixos-unstable` input. Home Manager manages its own CLI through `programs.home-manager.enable`, using the same pinned Home Manager input as the configuration. The MacBook uses standalone Home Manager for user-level configuration. Its base operating system, Docker daemon, cloud login, and other machine services remain native to the platform unless later added deliberately.
 
 The existing home NixOS machine is intentionally not changed. Its eventual migration will combine:
 
@@ -148,8 +148,8 @@ succeeds; failed, cancelled, or skipped builds do not pass the gate. The Main
 ruleset requires only `CI`, so adding machines needs no branch-rule changes.
 
 Evaluation uses the runner's local username and home directory with `--impure`,
-just like local use. Actions are pinned to commit hashes and receive read-only
-repository permissions. No additional repository secrets are required.
+just like local use. The check workflow references Actions by release tags or commit hashes and grants
+read-only repository permissions. Human-readable release tags are acceptable. No additional repository secrets are required.
 
 ### Dependency updates and merging
 
