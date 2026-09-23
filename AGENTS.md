@@ -12,7 +12,7 @@ Start with `git status --short` and preserve unrelated user changes.
 - `flake.nix`: exposes only `macbook` (`aarch64-darwin`); do not restore retired hosts.
   Use `nixpkgs-unstable` for macOS; add a separate `nixos-unstable` input when Linux is introduced.
 - `scripts/den.sh`: the `den` CLI. It normally targets `~/.config/den`, not the current checkout.
-- `.github/`: CI, Dependabot updates, and native Dependabot auto-merge.
+- `.github/`: CI, Copilot environment setup, Dependabot updates, and native Dependabot auto-merge.
 
 The Mac is actively managed, including public Git identity and iTerm settings.
 VS Code uses Settings Sync; leave it outside den. The existing NixOS machine is
@@ -54,6 +54,9 @@ Use `nix fmt` for Nix formatting, `bash -n scripts/den.sh` for CLI edits, and
 Report what passed and any checks you could not run.
 
 ## CI and maintenance
+
+`copilot-setup-steps.yml` installs `uv`/`uvx` for MCP servers. Keep its single job
+named `copilot-setup-steps`; Copilot requires that exact name.
 
 Keep build logic in `check.yml`. Dependabot PRs are approved and marked for native
 auto-merge; required checks in GitHub's branch rules control when they merge.

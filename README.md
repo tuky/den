@@ -151,6 +151,11 @@ Evaluation uses the runner's local username and home directory with `--impure`,
 just like local use. The check workflow references Actions by release tags or commit hashes and grants
 read-only repository permissions. Human-readable release tags are acceptable. No additional repository secrets are required.
 
+The `Copilot Setup Steps` workflow installs `uv` (including `uvx`) for Copilot's
+MCP servers and verifies that `uvx` is on `PATH`. It runs for pull requests that
+change the setup file and supports manual dispatch. Copilot uses it automatically
+once `.github/workflows/copilot-setup-steps.yml` is on the default branch.
+
 ### Dependency updates and merging
 
 Dependabot checks Nix flake inputs and GitHub Actions weekly, grouping updates
