@@ -11,6 +11,7 @@ Start with `git status --short` and preserve unrelated user changes.
 - `hosts/`: small, concrete host differences.
 - `flake.nix`: exposes only `darwinConfigurations.macbook` (`aarch64-darwin`); do not restore retired hosts.
   Use `nixpkgs-unstable` for macOS; add a separate `nixos-unstable` input when Linux is introduced.
+- `scripts/greeting.zsh`: local-only login dashboard; activation timestamp is written by the Darwin post-activation hook.
 - `scripts/den.sh`: the `den` CLI. It normally targets `~/.config/den`, not the current checkout.
 - `.github/`: CI, Copilot environment setup, Dependabot updates, and native Dependabot auto-merge.
 

@@ -18,28 +18,6 @@ let
       mkdir -p "$@" && cd "$_"
     }
 
-    den_welcome() {
-      [[ -o interactive ]] || return
-
-      local os_name="$(uname -s)"
-      case "$os_name" in
-        Linux) os_name="Linux" ;;
-        Darwin) os_name="macOS" ;;
-      esac
-
-      printf '╭─ den\n'
-      printf '│ %s · %s · zsh\n' "$os_name" "$(uname -m)"
-      if (( $+commands[nix] && $+commands[home-manager] )); then
-        printf '│ Nix · Home Manager\n'
-      elif (( $+commands[nix] )); then
-        printf '│ Nix · Home Manager not installed\n'
-      else
-        printf '│ Nix not found\n'
-      fi
-      printf '╰─ ready\n'
-    }
-
-    den_welcome
   '';
 in
 {
@@ -47,8 +25,7 @@ in
     enable = true;
     settings = {
       add_newline = false;
-      format = "$directory$git_branch$git_status$python$nodejs$golang$terraform$docker_context$fill$cmd_duration$line_break$character";
-      fill.symbol = "·";
+      format = "$directory$git_branch$git_status$python$nodejs$golang$terraform$docker_context$cmd_duration$line_break$character";
       directory = {
         truncation_length = 3;
         style = "blue";
@@ -75,7 +52,7 @@ in
 
   programs.zsh = {
     enable = true;
-    initContent = commonShellConfig;
+    initContent = commonShellConfig + builtins.readFile ../scripts/greeting.zsh;
     syntaxHighlighting.enable = true;
     history = {
       size = 10000;

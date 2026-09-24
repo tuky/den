@@ -78,7 +78,7 @@ That migration remains deferred; the MacBook is the only current host.
 
 The current shared configuration includes:
 
-- zsh as the only managed interactive shell, with a restrained Starship prompt and startup greeting;
+- zsh as the only managed interactive shell, with a restrained Starship prompt and login-shell dashboard;
 - the login shell remains an external machine setting and is not changed by `den`;
 - Git defaults, aliases, and the public Git identity configured in `home/git.nix`;
 - GitHub SSH configuration using `~/.ssh/id_ed25519_github`;
@@ -250,3 +250,13 @@ remains local. Keep a local preferences backup before the first migration.
 
 VS Code settings and extensions remain managed through its existing Settings Sync,
 not through `den`.
+
+## Shell dashboard
+
+Interactive login shells show the OS, architecture, zsh version, uptime, free
+space on the home filesystem, and battery status when available on macOS. A local
+Git check reports clean/changed entries in den independently of the last completed
+activation time. Clean does not mean applied. nix-darwin records the timestamp in
+`/var/db/den/last-activation`; older installations show “not recorded” until switched.
+No network requests run at shell startup. Low battery or disk space produces a
+warning; `NO_COLOR` disables warning color. Nested non-login shells stay quiet.
