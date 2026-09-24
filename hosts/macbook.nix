@@ -1,5 +1,5 @@
 { ... }:
 
 {
-  # Mac-specific settings can be added without changing shared Darwin config.
+  nixpkgs.hostPlatform = "aarch64-darwin";
 }

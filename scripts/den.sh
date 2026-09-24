@@ -12,7 +12,7 @@ Commands:
   show              Show available configurations
   status            Show repository path and working-tree state
   update            Update flake inputs (does not switch)
-  switch <host>     Apply a Home Manager host configuration
+  switch <host>     Apply system and user configuration
   format            Format the flake
   check             Check flake for errors
   help              Show this help message
@@ -43,6 +43,16 @@ if [[ ! -f "${FLAKE_PATH}/flake.nix" ]]; then
     exit 1
 fi
 
+# Capture the invoking account before sudo, never root's environment.
+local_identity() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        echo "den: run as your normal user; den elevates system activation itself." >&2
+        exit 1
+    fi
+    export DEN_USER="$(id -un)"
+    export DEN_HOME="$HOME"
+}
+
 status() {
     local branch state
     branch="$(git -C "$FLAKE_PATH" branch --show-current 2>/dev/null || true)"
@@ -61,7 +71,8 @@ status() {
 case "${1:-help}" in
     show)
         echo "Available den configurations:"
-        nix flake show --impure "$FLAKE_PATH"
+        local_identity
+        nix flake show --impure --no-update-lock-file "$FLAKE_PATH"
         ;;
     status)
         status
@@ -78,7 +89,32 @@ case "${1:-help}" in
         fi
         host="$2"
         echo "Switching den host: $host"
-        home-manager switch --impure --flake "$FLAKE_PATH#$host"
+        local_identity
+        if [[ ! "$host" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            echo "den: invalid host name: $host" >&2
+            exit 2
+        fi
+        case "$(uname -s)" in
+            Darwin)
+                # Build the locked CLI as the user, including on a fresh Mac.
+                rebuild_package="$(nix build --no-link --print-out-paths --no-update-lock-file "$FLAKE_PATH#darwin-rebuild")"
+                sudo /usr/bin/env "DEN_USER=$DEN_USER" "DEN_HOME=$DEN_HOME" \
+                    "$rebuild_package/bin/darwin-rebuild" switch --impure --no-update-lock-file --flake "$FLAKE_PATH#$host"
+                ;;
+            Linux)
+                if [[ ! -e /etc/NIXOS ]]; then
+                    echo "den: system switching on Linux requires NixOS." >&2
+                    exit 1
+                fi
+                rebuild_command="$(command -v nixos-rebuild)"
+                sudo /usr/bin/env "DEN_USER=$DEN_USER" "DEN_HOME=$DEN_HOME" \
+                    "$rebuild_command" switch --impure --no-update-lock-file --flake "$FLAKE_PATH#$host"
+                ;;
+            *)
+                echo "den: unsupported operating system." >&2
+                exit 1
+                ;;
+        esac
         ;;
     format)
         echo "Formatting den..."
@@ -87,7 +123,8 @@ case "${1:-help}" in
         ;;
     check)
         echo "Checking flake for errors..."
-        nix flake check --impure "$FLAKE_PATH"
+        local_identity
+        nix flake check --impure --no-update-lock-file "$FLAKE_PATH"
         echo "No errors found."
         ;;
     help|--help|-h)

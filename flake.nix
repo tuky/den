@@ -7,10 +7,14 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-darwin = {
+      url = "github:nix-darwin/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     codex-cli-nix.url = "github:sadjow/codex-cli-nix";
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, codex-cli-nix }:
+  outputs = inputs@{ self, nixpkgs, home-manager, nix-darwin, codex-cli-nix }:
     let
       supportedSystems = [ "aarch64-darwin" ];
       forEachSystem = function:
@@ -19,34 +23,41 @@
           value = function system;
         }) supportedSystems);
 
-      # Local identity is supplied at evaluation time, never stored in the flake.
-      username = builtins.getEnv "USER";
-      homeDirectory = builtins.getEnv "HOME";
-      mkHomeConfiguration = system: modules:
-        if username == "" || homeDirectory == "" then
-          throw "den: local identity is unavailable. Use --impure with USER and HOME set. To upgrade an older den command, run: bash ~/.config/den/scripts/den.sh switch <host>"
-        else
-        home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.${system};
-          extraSpecialArgs = { inherit inputs; };
-          modules = modules ++ [
+      # Explicit variables survive privilege elevation without adopting root's identity.
+      username = builtins.getEnv "DEN_USER";
+      homeDirectory = builtins.getEnv "DEN_HOME";
+      validIdentity = builtins.match "[a-zA-Z_][a-zA-Z0-9_-]*" username != null
+        && username != "root"
+        && builtins.match "/.+" homeDirectory != null
+        && homeDirectory != "/var/root";
+    in
+    {
+      darwinConfigurations.macbook =
+        if !validIdentity then
+          throw "den: set DEN_USER to a non-root account and DEN_HOME to its absolute home directory; evaluate with --impure. Use den switch macbook as your normal user."
+        else nix-darwin.lib.darwinSystem {
+          modules = [
+            ./modules/darwin/default.nix
+            ./hosts/macbook.nix
+            home-manager.darwinModules.home-manager
             {
-              home.username = username;
-              home.homeDirectory = homeDirectory;
-              # Stable Home Manager schema baseline, independent of input versions.
-              home.stateVersion = "26.05";
+              system.primaryUser = username;
+              users.users.${username}.home = homeDirectory;
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                extraSpecialArgs = { inherit inputs; };
+                users.${username} = {
+                  imports = [ ./home/default.nix ./modules/darwin/home.nix ];
+                  home.username = username;
+                  home.homeDirectory = homeDirectory;
+                  # Stable Home Manager schema baseline, independent of input versions.
+                  home.stateVersion = "26.05";
+                };
+              };
             }
           ];
         };
-    in
-    {
-      homeConfigurations = {
-        macbook = mkHomeConfiguration "aarch64-darwin" [
-          ./home/default.nix
-          ./modules/darwin/default.nix
-          ./hosts/macbook.nix
-        ];
-      };
 
       devShells = forEachSystem (system: {
         default = (nixpkgs.legacyPackages.${system}).mkShell {
@@ -59,11 +70,15 @@
       });
 
       apps = forEachSystem (system: {
-        home-manager = {
+        darwin-rebuild = {
           type = "app";
-          program = "${home-manager.packages.${system}.default}/bin/home-manager";
-          meta.description = "Pinned Home Manager command for den";
+          program = "${nix-darwin.packages.${system}.darwin-rebuild}/bin/darwin-rebuild";
+          meta.description = "Pinned nix-darwin command for den";
         };
+      });
+
+      packages = forEachSystem (system: {
+        darwin-rebuild = nix-darwin.packages.${system}.darwin-rebuild;
       });
 
       formatter = forEachSystem (system:

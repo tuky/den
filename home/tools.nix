@@ -1,8 +1,6 @@
 { inputs, pkgs, ... }:
 
 {
-  nixpkgs.config.allowUnfree = true;
-
   home.packages = with pkgs; [
     # Languages and runtimes
     go
@@ -12,7 +10,6 @@
     uv
 
     # Containers, infrastructure, and cloud
-    colima
     docker
     docker-compose
     devbox

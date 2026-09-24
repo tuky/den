@@ -1,6 +1,6 @@
 # den
 
-`den` is my personal, declarative configuration for the machines I use and the software I use on them. It describes what makes those machines mine: the shell, terminal tools, Git and SSH defaults, editors, applications, development tooling, and eventually system configuration where Nix is appropriate.
+`den` is my personal, declarative configuration for the machines I use and the software I use on them. It describes what makes those machines mine: the shell, terminal tools, Git and SSH defaults, editors, applications, development tooling, and system configuration where Nix is appropriate.
 
 Development tools are an important part of `den`, but they are one category within a broader personal computing configuration.
 
@@ -8,10 +8,10 @@ Development tools are an important part of `den`, but they are one category with
 
 | Host | Platform | Current status | Activation |
 | --- | --- | --- | --- |
-| `macbook` | macOS | Active; Home Manager manages the user environment | `home-manager switch --impure --flake .#macbook` |
+| `macbook` | macOS | nix-darwin with integrated Home Manager | `den switch macbook` |
 | `home-nixos` | NixOS | Existing machine; migration is deferred | Not exposed yet |
 
-The MacBook is already managed. Activation remains explicit; the repository does not bootstrap machines automatically.
+The MacBook configuration includes system and user settings. Activation remains explicit; upgrading from standalone Home Manager requires the migration steps below.
 
 ## Architecture
 
@@ -45,7 +45,7 @@ den/
 │   ├── ssh.nix
 │   └── direnv.nix
 ├── modules/
-│   └── darwin/default.nix
+│   └── darwin/           system default.nix, user home.nix and iterm2/
 └── hosts/
     └── macbook.nix
 ```
@@ -54,7 +54,17 @@ A host selects the shared `home/` modules, its platform module, and its own smal
 
 ## Nix and Home Manager
 
-The flake uses `nixpkgs-unstable` for macOS and Home Manager. Future Linux hosts should use a separate `nixos-unstable` input. Home Manager manages its own CLI through `programs.home-manager.enable`, using the same pinned Home Manager input as the configuration. The MacBook uses standalone Home Manager for user-level configuration. Its base operating system, Docker daemon, cloud login, and other machine services remain native to the platform unless later added deliberately.
+The flake uses `nixpkgs-unstable`, nix-darwin, and integrated Home Manager for macOS.
+Future Linux hosts should use a separate `nixos-unstable` input. `den switch` applies
+system and user configuration together. The current system module enables zsh
+integration and leaves the login shell unchanged. Home Manager owns the existing
+user tools and preferences; Colima belongs to the Darwin user module.
+
+Nix itself remains managed by its installer (`nix.enable = false`), including its
+daemon and experimental-feature settings. This supports existing Nix installations,
+including Determinate Nix. Apple still manages macOS installation and updates.
+GUI applications, cloud credentials, and the Colima runtime remain externally
+managed. Add further system settings deliberately in `modules/darwin/default.nix`.
 
 The existing home NixOS machine is intentionally not changed. Its eventual migration will combine:
 
@@ -94,28 +104,41 @@ SSH configuration is kept modular so the authentication strategy can change late
 
 ## First use on macOS
 
-This is documentation for a future/manual activation; it does not run anything automatically.
+1. Create your macOS account and install Nix with `nix-command` and `flakes` enabled.
+   The `macbook` host targets Apple Silicon.
+2. Clone this repository to `~/.config/den` and provision credentials separately.
+3. Back up existing shell files and iTerm preferences before taking ownership.
+   Quit iTerm and use another terminal for activation.
+4. As your normal user (not with `sudo`), run:
 
-1. Install Nix with flakes enabled on the Mac.
-2. Clone this repository and enter it.
-3. Provision credentials separately, including the GitHub SSH key if needed.
-4. Inspect the configuration, then activate the MacBook host:
+   ```bash
+   bash ~/.config/den/scripts/den.sh switch macbook
+   ```
 
-    ```bash
-    nix run .#home-manager -- switch --impure -b backup --flake .#macbook
-    ```
+   The script builds the locked `darwin-rebuild` tool, then requests sudo for
+   system activation. It works before nix-darwin or the new `den` is installed.
+   File collisions are intentionally not overwritten: back up and move only the
+   conflicting unmanaged files reported by nix-darwin or Home Manager, then retry.
+5. Open a new terminal and use `den switch macbook` for subsequent changes.
 
-    The backup flag is for the first activation when Home Manager takes ownership of existing files. After activation, use the installed command for later changes:
+### Migrating this Mac from standalone Home Manager
 
-    ```bash
-    home-manager switch --impure --flake ~/.config/den#macbook
-    ```
+Use the repository script above once; the currently installed `den` may still
+invoke standalone Home Manager. Keep the old Home Manager generation for recovery.
+Integrated Home Manager recognizes its existing managed symlinks. User packages
+now live in the system-managed user profile; do not continue running standalone
+`home-manager switch` against this repository. The standalone `homeConfigurations`
+output has been replaced by `darwinConfigurations.macbook`.
 
-5. Restart the shell if needed and verify the tools relevant to that machine.
+The old standalone profile may continue to expose old packages. After a successful
+switch and a fresh login, verify the tools and shell, then optionally remove its
+`home-manager` package entry using the profile tooling appropriate to that profile.
+Do not remove the entire user profile or unrelated packages. No profile cleanup is
+automated by den.
 
 ## Working on den
 
-After the first Home Manager activation, `den` is the primary interface for this repository and can be run from any directory:
+After the first nix-darwin activation, `den` is the primary interface for this repository and can be run from any directory:
 
 ```bash
 den status
@@ -124,26 +147,30 @@ den check
 den switch macbook
 ```
 
-`den` locates the repository at `~/.config/den` instead of using the current working directory. `den update` only updates the lock file; it never switches the active configuration. The only current Home Manager host is `macbook`.
+`den` locates the repository at `~/.config/den` instead of using the current working directory. `den update` only updates the lock file; it never switches the active configuration. The only current system host is `macbook`. On macOS, switching uses the pinned `darwin-rebuild`; on NixOS it uses the installed `nixos-rebuild`. No Linux host is configured yet.
 
 Use local, non-destructive checks while editing:
 
 ```bash
-nix flake check --impure
+export DEN_USER="$(id -un)" DEN_HOME="$HOME"
+nix flake check --impure --no-update-lock-file
+nix build --impure --no-update-lock-file --no-link .#darwinConfigurations.macbook.system
 nix fmt
-nix flake show --impure
+python3 -m unittest discover -s tests
 ```
 
-Home Manager configurations can be evaluated without activating them through their `activationPackage` output. `home.stateVersion = "26.05"` is a deliberate stable schema baseline for this new configuration; it is independent of the nixpkgs and Home Manager input versions and should only change as part of a planned migration. The lock file should be committed when inputs are intentionally updated.
+The complete system can be built without activating it through `darwinConfigurations.macbook.system`. New untracked modules require `path:.` instead of `.` until added to Git. `home.stateVersion = "26.05"` is a deliberate stable schema baseline for this new configuration; it is independent of the nixpkgs and Home Manager input versions and should only change as part of a planned migration. The lock file should be committed when inputs are intentionally updated.
 
 ## GitHub Actions
 
 The `Check den` workflow runs on pushes, pull requests, and manual dispatches.
-It checks shell syntax and the flake, then builds the `macbook` Home Manager
-activation package on macOS ARM64. CI never activates a configuration or updates
+It checks the CLI and flake, then builds the complete `macbook` nix-darwin system
+including Home Manager on macOS ARM64. CI never activates a configuration or updates
 `flake.lock`.
 
-Builds use a host matrix. The final `CI` job succeeds only when every matrix build
+Builds use a host matrix with an explicit runner, architecture, and build target.
+Darwin targets use `darwinConfigurations.<host>.system`; future NixOS targets use
+`nixosConfigurations.<host>.config.system.build.toplevel`. The final `CI` job succeeds only when every matrix build
 succeeds; failed, cancelled, or skipped builds do not pass the gate. The Main
 ruleset requires only `CI`, so adding machines needs no branch-rule changes.
 
@@ -180,7 +207,6 @@ The following are intentionally future work rather than claims about the current
 
 - richer editor, terminal, font, application, and user-service modules;
 - additional host-specific settings as real differences appear;
-- Darwin-specific packaging and native integration;
 - a `home-nixos` host with NixOS system modules;
 - migration of the existing traditional NixOS configuration into a flake with Home Manager;
 - a secrets solution only if external credential provisioning becomes insufficient.
@@ -191,15 +217,17 @@ MIT. See [LICENSE](LICENSE).
 
 ## Local identity
 
-When upgrading from a version that hard-coded local identity, activate once using the repository script so the new `den` command is installed:
+Evaluation reads `DEN_USER` and `DEN_HOME` with `--impure`. `den show`, `den check`,
+and `den switch` capture the current account with `id -un` and its local `HOME`.
+Switching passes these dedicated variables through sudo explicitly; it never
+uses root's `USER` or `HOME` as the target account. Run den as your normal user.
+For direct Nix commands, export the variables as shown above. Missing identity,
+root, and non-absolute home directories are rejected by the flake.
 
-```bash
-bash ~/.config/den/scripts/den.sh switch macbook
-```
-
-Subsequent activations can use `den switch <host>` as usual.
-
-Home Manager reads `USER` and `HOME` from the local environment. Evaluation requires `--impure`; `den show`, `den check`, and `den switch` supply it automatically. Run activation as your own user. Usernames and home directories are not stored in the flake. Generated Home Manager files and diagnostic output may still contain local absolute paths. The shell greeting and prompt omit the username and hostname, and `den status` abbreviates the home directory as `~`.
+Usernames and home directories are not stored in Git. Generated Nix store files
+and diagnostic output still contain local identity and paths; this is repository
+privacy, not secret storage. CI supplies its own runner account. The prompt omits
+the username and hostname, and `den status` abbreviates the home directory as `~`.
 
 ## iTerm on macOS
 

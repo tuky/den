@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  home-manager:
+  system:
     name: Build ${{ matrix.host }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
@@ -24,6 +24,7 @@ jobs:
           - host: macbook
             runner: macos-26
             system: aarch64-darwin
+            target: darwinConfigurations.macbook.system
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -40,25 +41,29 @@ jobs:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
           test "$(nix eval --impure --raw --expr builtins.currentSystem)" = "$EXPECTED_SYSTEM"
-          # den reads these values during impure Home Manager evaluation.
-          echo "USER=$(id -un)" >> "$GITHUB_ENV"
+          # den reads these values during impure system evaluation.
+          echo "DEN_USER=$(id -un)" >> "$GITHUB_ENV"
           test -n "$HOME"
+          echo "DEN_HOME=$HOME" >> "$GITHUB_ENV"
 
       - name: Check shell syntax
         run: bash -n scripts/den.sh
 
+      - name: Test CLI identity and dispatch
+        run: python3 -m unittest discover -s tests
+
       - name: Check flake
         run: nix flake check --impure --no-update-lock-file --show-trace
 
-      # Flake checking alone does not build custom homeConfigurations outputs.
-      - name: Build Home Manager configuration
+      # Build each host explicitly; flake checking alone is insufficient.
+      - name: Build system and Home Manager configuration
         env:
-          DEN_HOST: ${{ matrix.host }}
-        run: nix build --impure --no-update-lock-file --no-link --print-build-logs ".#homeConfigurations.${DEN_HOST}.activationPackage"
+          BUILD_TARGET: ${{ matrix.target }}
+        run: nix build --impure --no-update-lock-file --no-link --print-build-logs ".#${BUILD_TARGET}"
 
   ci:
     name: CI
-    needs: home-manager
+    needs: system
     # Run even when a build fails or is skipped; a skipped gate can satisfy rules.
     if: ${{ always() }}
     runs-on: ubuntu-24.04
@@ -66,5 +71,5 @@ jobs:
     steps:
       - name: Require every matrix build to succeed
         env:
-          BUILD_RESULT: ${{ needs.home-manager.result }}
+          BUILD_RESULT: ${{ needs.system.result }}
         run: test "$BUILD_RESULT" = success
