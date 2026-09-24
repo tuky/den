@@ -57,7 +57,7 @@ A host selects the shared `home/` modules, its platform module, and its own smal
 The flake uses `nixpkgs-unstable`, nix-darwin, and integrated Home Manager for macOS.
 Future Linux hosts should use a separate `nixos-unstable` input. `den switch` applies
 system and user configuration together. The current system module enables zsh
-integration and leaves the login shell unchanged. Home Manager owns the existing
+integration and Touch ID for sudo, and leaves the login shell unchanged. Home Manager owns the existing
 user tools and preferences; Colima belongs to the Darwin user module.
 
 Nix itself remains managed by its installer (`nix.enable = false`), including its
