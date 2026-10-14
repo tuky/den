@@ -45,7 +45,7 @@ den/
 │   ├── ssh.nix
 │   └── direnv.nix
 ├── modules/
-│   └── darwin/           system default.nix, user home.nix and iterm2/
+│   └── darwin/           system default.nix and user home.nix
 └── hosts/
     └── macbook.nix
 ```
@@ -107,8 +107,7 @@ SSH configuration is kept modular so the authentication strategy can change late
 1. Create your macOS account and install Nix with `nix-command` and `flakes` enabled.
    The `macbook` host targets Apple Silicon.
 2. Clone this repository to `~/.config/den` and provision credentials separately.
-3. Back up existing shell files and iTerm preferences before taking ownership.
-   Quit iTerm and use another terminal for activation.
+3. Back up existing shell files before taking ownership.
 4. As your normal user (not with `sudo`), run:
 
    ```bash
@@ -231,22 +230,22 @@ the username and hostname, and `den status` abbreviates the home directory as `~
 
 ## iTerm on macOS
 
-Home Manager manages iTerm's default profile, light/dark colors, Monaco 12 font,
-keyboard and pointer behavior, and existing Claude Code profile triggers.
-The reviewed settings live in `modules/darwin/iterm2/preferences.json`.
-The profile's home directory is supplied locally at evaluation time.
+iTerm2 and its settings are managed locally, outside `den`. Change preferences
+in iTerm2 itself.
 
-The Darwin module generates `~/.config/iterm2/den/com.googlecode.iterm2.plist`
-and enables iTerm's [custom preferences folder](https://iterm2.com/documentation-preferences-general.html).
-iTerm itself remains a native application installed outside `den`.
-Quit iTerm before running `den switch macbook`, then reopen it to load settings.
-Use another terminal for activation if necessary; activation never quits sessions.
+If this Mac previously used den's iTerm2 module, migrate before the next
+`den switch macbook`:
 
-Edit the JSON and switch to persist changes. The generated preferences file is
-read-only: if iTerm offers to save GUI changes back to the folder, decline.
-Window positions, history, installation metadata, saved review prompts, workgroups,
-and credentials are not captured in the repository. Existing application state
-remains local. Keep a local preferences backup before the first migration.
+1. Back up `~/.config/iterm2/den/com.googlecode.iterm2.plist` to a regular local
+   file outside that directory, and back up your existing local iTerm2 preferences.
+2. In iTerm2 Settings → General → Preferences, disable loading preferences from
+   the custom folder. Preserve the current settings locally if prompted, then
+   quit and reopen iTerm2 to verify them. Keep the backup until the handoff is complete.
+3. Run `den switch macbook` when ready. Home Manager removes its generated
+   preferences file; den no longer writes iTerm2 preferences or selects a custom folder.
+
+Removing the module does not reset the custom-folder preference previously
+written to macOS defaults, so complete the local handoff before switching.
 
 VS Code settings and extensions remain managed through its existing Settings Sync,
 not through `den`.

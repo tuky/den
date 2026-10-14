@@ -21,7 +21,7 @@ Platforms describe reusable operating-system behavior. Hosts describe actual env
 
 ## Boundaries
 
-Home Manager owns user-level files, programs, packages, shell setup, Git, SSH client configuration, direnv, and future user services/resources. nix-darwin owns declared macOS system settings and applies Home Manager in the same switch. Nix daemon management stays with the installer (`nix.enable = false`); macOS updates and unmanaged applications remain native.
+Home Manager owns user-level files, programs, packages, shell setup, Git, SSH client configuration, direnv, and future user services/resources. nix-darwin owns declared macOS system settings and applies Home Manager in the same switch. Nix daemon management stays with the installer (`nix.enable = false`); macOS updates and unmanaged applications remain native. iTerm2 preferences are managed locally, outside den.
 
 The existing NixOS machine is deliberately outside the current outputs. Its eventual host will combine NixOS system modules with Home Manager as a NixOS module. The existing traditional configuration is not changed as part of this repository work.
 

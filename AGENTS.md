@@ -7,7 +7,7 @@ Start with `git status --short` and preserve unrelated user changes.
 ## Where changes belong
 
 - `home/`: shared user settings and tools. Import new modules in `home/default.nix`.
-- `modules/darwin/default.nix`: nix-darwin system settings; `home.nix` and `iterm2/` are Home Manager modules.
+- `modules/darwin/default.nix`: nix-darwin system settings; `home.nix` is the Darwin Home Manager module.
 - `hosts/`: small, concrete host differences.
 - `flake.nix`: exposes only `darwinConfigurations.macbook` (`aarch64-darwin`); do not restore retired hosts.
   Use `nixpkgs-unstable` for macOS; add a separate `nixos-unstable` input when Linux is introduced.
@@ -15,7 +15,7 @@ Start with `git status --short` and preserve unrelated user changes.
 - `scripts/den.sh`: the `den` CLI. It normally targets `~/.config/den`, not the current checkout.
 - `.github/`: CI, Copilot environment setup, Dependabot updates, and native Dependabot auto-merge.
 
-The Mac is actively managed, including public Git identity and iTerm settings.
+The Mac is actively managed, including public Git identity. iTerm2 settings remain locally managed.
 VS Code uses Settings Sync; leave it outside den. The existing NixOS machine is
 not managed here yet. Prefer small modules and simple solutions over new abstractions.
 
@@ -26,7 +26,6 @@ not managed here yet. Prefer small modules and simple solutions over new abstrac
 - Derive machine username/home from local configuration; do not hard-code them.
   Flake evaluation needs `DEN_USER`, `DEN_HOME`, and `--impure`. The CLI captures identity before sudo; run it as the normal user.
 - Edit source files, not generated Home Manager files or Nix-store symlinks.
-  iTerm's source is `modules/darwin/iterm2/preferences.json`.
 - Keep the authoritative `home.stateVersion` in `flake.nix` unchanged unless deliberately migrating its schema.
   Integrated Home Manager is activated through nix-darwin, not standalone switching.
   Keep `system.stateVersion = 6` stable too; Nix daemon ownership remains with the installer.

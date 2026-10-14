@@ -7,14 +7,14 @@
 - `home/` contains shared Home Manager modules.
 - `modules/darwin/` contains reusable macOS behavior.
 - `hosts/macbook.nix` is the sole current host entry point.
-- `flake.nix` exposes `homeConfigurations.macbook`.
+- `flake.nix` exposes `darwinConfigurations.macbook`.
 - `home-nixos` and NixOS system modules are intentionally deferred.
 
 ## Current configuration
 
 The shared Home Manager configuration provides zsh setup with Starship, Git defaults and aliases, GitHub SSH host configuration, direnv/nix-direnv, tmux, CLI utilities, language runtimes, cloud tools, Docker CLI tooling, and `uv`.
 
-The MacBook is actively managed by Home Manager, including public Git identity and iTerm preferences. Credentials and machine account identity remain external. VS Code uses its existing Settings Sync. The current shell remains unchanged until the user changes it outside `den`.
+The MacBook is actively managed by nix-darwin with integrated Home Manager, including public Git identity. iTerm2 preferences are managed locally outside den. Credentials and machine account identity remain external. VS Code uses its existing Settings Sync. The current shell remains unchanged until the user changes it outside `den`.
 
 ## Roadmap
 
