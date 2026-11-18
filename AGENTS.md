@@ -9,6 +9,7 @@ Start with `git status --short` and preserve unrelated user changes.
 - `home/`: shared user settings and tools. Import new modules in `home/default.nix`.
 - `modules/darwin/default.nix`: nix-darwin system settings; `home.nix` is the Darwin Home Manager module.
 - `hosts/`: small, concrete host differences.
+- `hosts/macbook.nix` installs schpet's Linear CLI from the locked `linear-cli` input and loads the manually provisioned `~/.config/linear/api-key` in interactive zsh; never read or manage the secret through Nix.
 - `flake.nix`: exposes only `darwinConfigurations.macbook` (`aarch64-darwin`); do not restore retired hosts.
   Use `nixpkgs-unstable` for macOS; add a separate `nixos-unstable` input when Linux is introduced.
 - `scripts/greeting.zsh`: local-only login dashboard; activation timestamp is written by the Darwin post-activation hook.

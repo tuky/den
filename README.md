@@ -102,6 +102,27 @@ This is a public repository. It contains only declarative, non-secret defaults. 
 
 SSH configuration is kept modular so the authentication strategy can change later without restructuring the rest of the repository.
 
+### Linear API key on the MacBook
+
+The `macbook` host installs [schpet/linear-cli](https://github.com/schpet/linear-cli)
+as `linear` from its locked upstream Nix flake. It loads `LINEAR_API_KEY` into interactive zsh sessions from
+`~/.config/linear/api-key` when that file is readable. Provision it manually in zsh:
+
+```zsh
+mkdir -p ~/.config/linear
+chmod 700 ~/.config/linear
+read -rs 'linear_key?Paste Linear API key (hidden): '
+printf '\n'
+(umask 077; printf '%s' "$linear_key" > ~/.config/linear/api-key)
+chmod 600 ~/.config/linear/api-key
+unset linear_key
+```
+
+Keep this file outside Git and synced dotfiles. den manages only the shell loader;
+it never reads the key during evaluation or copies it into the Nix store. After
+applying the configuration with `den switch macbook`, open a new interactive zsh
+session. A missing key file is silently skipped.
+
 ## First use on macOS
 
 1. Create your macOS account and install Nix with `nix-command` and `flakes` enabled.

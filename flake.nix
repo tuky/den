@@ -12,9 +12,13 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     codex-cli-nix.url = "github:sadjow/codex-cli-nix";
+    linear-cli = {
+      url = "github:schpet/linear-cli";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, nix-darwin, codex-cli-nix }:
+  outputs = inputs@{ self, nixpkgs, home-manager, nix-darwin, codex-cli-nix, linear-cli }:
     let
       supportedSystems = [ "aarch64-darwin" ];
       forEachSystem = function:
