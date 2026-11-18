@@ -136,7 +136,20 @@
         "home-manager": "home-manager",
         "linear-cli": "linear-cli",
         "nix-darwin": "nix-darwin",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "sentry-release": "sentry-release"
+      }
+    },
+    "sentry-release": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-dUiogsq9o0rs86T6mMbnjqiATxkhouQFAM0ixMbr29g=",
+        "type": "file",
+        "url": "https://release-registry.services.sentry.io/apps/sentry/latest"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://release-registry.services.sentry.io/apps/sentry/latest"
       }
     },
     "systems": {

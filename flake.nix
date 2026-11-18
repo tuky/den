@@ -16,9 +16,13 @@
       url = "github:schpet/linear-cli";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sentry-release = {
+      url = "file+https://release-registry.services.sentry.io/apps/sentry/latest";
+      flake = false;
+    };
   };
 
-  outputs = inputs@{ self, nixpkgs, home-manager, nix-darwin, codex-cli-nix, linear-cli }:
+  outputs = inputs@{ self, nixpkgs, home-manager, nix-darwin, codex-cli-nix, linear-cli, sentry-release }:
     let
       supportedSystems = [ "aarch64-darwin" ];
       forEachSystem = function:

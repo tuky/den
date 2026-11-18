@@ -123,6 +123,31 @@ it never reads the key during evaluation or copies it into the Nix store. After
 applying the configuration with `den switch macbook`, open a new interactive zsh
 session. A missing key file is silently skipped.
 
+### Sentry CLI on the MacBook
+
+The `macbook` host installs the [`sentry` CLI](https://cli.sentry.dev/) from
+Sentry's official Apple Silicon binary. Its stable release metadata and checksum
+are pinned through the `sentry-release` input in `flake.lock`. `den update` refreshes
+that input; `den switch macbook` installs the updated version. Use den for upgrades.
+
+Interactive zsh loads `SENTRY_AUTH_TOKEN` from `~/.config/sentry/auth-token` when
+readable. Provision the token manually in zsh:
+
+```zsh
+mkdir -p ~/.config/sentry
+chmod 700 ~/.config/sentry
+read -rs 'sentry_token?Paste Sentry auth token (hidden): '
+printf '\n'
+(umask 077; printf '%s' "$sentry_token" > ~/.config/sentry/auth-token)
+chmod 600 ~/.config/sentry/auth-token
+unset sentry_token
+```
+
+Keep the token file outside Git and synced dotfiles. den manages only the loader
+and never reads the token during evaluation or copies it into the Nix store.
+After `den switch macbook`, open a new interactive zsh session. A missing token
+file is silently skipped.
+
 ## First use on macOS
 
 1. Create your macOS account and install Nix with `nix-command` and `flakes` enabled.
