@@ -1,4 +1,4 @@
-{ inputs, pkgs, ... }:
+{ inputs, lib, pkgs, ... }:
 
 {
   home.packages = with pkgs; [
@@ -27,11 +27,10 @@
     nano
     curl
     wget
-    openssh
     unzip
     htop
 
     # AI
     inputs.codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ];
+  ] ++ lib.optional (!stdenv.hostPlatform.isDarwin) openssh;
 }

@@ -83,7 +83,7 @@ The current shared configuration includes:
 - Git defaults, aliases, and the public Git identity configured in `home/git.nix`;
 - GitHub SSH configuration using `~/.ssh/id_ed25519_github`;
 - direnv with nix-direnv integration;
-- tmux, jq, yq, curl, wget, and OpenSSH;
+- tmux, jq, yq, curl, and wget;
 - Go, Node.js, Python, and `uv`;
 - Docker CLI tools, Terraform, `gcloud`, and `gh`.
 
@@ -101,6 +101,10 @@ This is a public repository. It contains only declarative, non-secret defaults. 
 - no secrets-management framework is added until there is a concrete need for one.
 
 SSH configuration is kept modular so the authentication strategy can change later without restructuring the rest of the repository.
+On the MacBook, den uses Apple's built-in SSH client and configures it to add
+keys to the agent, use the macOS Keychain for passphrases, and include
+`~/.ssh/id_ed25519` for all hosts. The SSH config lists host-specific
+identities before this default identity.
 
 ### Linear API key on the MacBook
 
